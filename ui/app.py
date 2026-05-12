@@ -10,14 +10,15 @@ import logging
 class OverlayWidget(QWidget):
     """Floating translucent overlay showing Trixie's live status."""
     
-    def __init__(self, start_cb, parent=None):
+    def __init__(self, toggle_cb, parent=None):
         super().__init__(parent)
-        self.start_cb = start_cb
+        self.toggle_cb = toggle_cb
         self.pulse_phase = 0
         self.status_text = "Idle"
         self.transcript_text = ""
         self.response_text = ""
         self.history_lines = []
+        self.is_ball_mode = False
         
         self.setWindowTitle("Trixie")
         self.setWindowFlags(
@@ -40,6 +41,13 @@ class OverlayWidget(QWidget):
         self.pulse_timer.timeout.connect(self._pulse_tick)
         self.pulse_timer.start(50)
         
+        # Minimize button
+        self.btn_minimize = QPushButton("-", self)
+        self.btn_minimize.setGeometry(self.width() - 30, 8, 20, 20)
+        self.btn_minimize.setStyleSheet("background: transparent; color: white; font-size: 16px; font-weight: bold; border: none;")
+        self.btn_minimize.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_minimize.clicked.connect(self.toggle_ball_mode)
+        
         # Feedback buttons
         self.btn_up = QPushButton("👍", self)
         self.btn_up.setGeometry(self.width() - 80, 8, 30, 24)
@@ -58,6 +66,22 @@ class OverlayWidget(QWidget):
         self.text_input.setGeometry(16, self.height() - 36, self.width() - 32, 28)
         self.text_input.setStyleSheet("background: rgba(40, 40, 60, 180); color: white; border: 1px solid rgba(80, 80, 120, 150); border-radius: 14px; padding: 0 12px;")
         self.text_input.setPlaceholderText("Type a command and press Enter...")
+        
+    def toggle_ball_mode(self):
+        self.is_ball_mode = not self.is_ball_mode
+        if self.is_ball_mode:
+            self.setFixedSize(140, 60)
+            self.text_input.hide()
+            self.btn_minimize.hide()
+            self.btn_up.setGeometry(10, 15, 30, 30)
+            self.btn_down.setGeometry(100, 15, 30, 30)
+        else:
+            self.setFixedSize(340, 310)
+            self.text_input.show()
+            self.btn_minimize.show()
+            self.btn_up.setGeometry(self.width() - 80, 8, 30, 24)
+            self.btn_down.setGeometry(self.width() - 40, 8, 30, 24)
+        self.update()
         
     def show_feedback_buttons(self):
         self.btn_up.show()
@@ -94,6 +118,30 @@ class OverlayWidget(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         
+        if self.is_ball_mode:
+            # Draw the ball overlay
+            grad = QLinearGradient(40, 0, 100, 60)
+            grad.setColorAt(0, QColor(90, 60, 200, 220))
+            grad.setColorAt(1, QColor(40, 120, 220, 220))
+            
+            # Pulse if listening
+            if self.status_text == "Listening...":
+                import math
+                alpha = int(128 + 127 * math.sin(math.radians(self.pulse_phase)))
+                p.setBrush(QColor(0, 220, 100, alpha))
+                p.setPen(Qt.PenStyle.NoPen)
+                p.drawEllipse(35, -5, 70, 70)
+                
+            p.setBrush(grad)
+            p.setPen(QPen(QColor(255, 255, 255, 100), 2))
+            p.drawEllipse(40, 0, 60, 60)
+            
+            p.setPen(QColor(255, 255, 255))
+            p.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
+            p.drawText(40, 0, 60, 60, Qt.AlignmentFlag.AlignCenter, "T")
+            p.end()
+            return
+            
         # Background: dark glassmorphic rounded rect
         p.setBrush(QColor(18, 18, 24, 220))
         p.setPen(QPen(QColor(80, 80, 120, 100), 1))
@@ -187,13 +235,24 @@ class OverlayWidget(QWidget):
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             self._drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            self._click_handled = False
     
     def mouseMoveEvent(self, event):
         if self._drag_pos and event.buttons() & Qt.MouseButton.LeftButton:
             self.move(event.globalPosition().toPoint() - self._drag_pos)
+            self._click_handled = True
     
     def mouseReleaseEvent(self, event):
-        self._drag_pos = None
+        if getattr(event, 'button', lambda: None)() == Qt.MouseButton.LeftButton:
+            if not getattr(self, '_click_handled', True) and self.is_ball_mode:
+                if 40 <= event.pos().x() <= 100:
+                    self.toggle_cb()
+            self._drag_pos = None
+            
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self.is_ball_mode:
+            if 40 <= event.pos().x() <= 100:
+                self.toggle_ball_mode()
 
 
 class UIEngine(QObject):
@@ -205,13 +264,13 @@ class UIEngine(QObject):
     feedback_signal = pyqtSignal(str)
     text_command_signal = pyqtSignal(str)
     
-    def __init__(self, start_listening_callback, quit_callback, feedback_callback, text_command_callback):
+    def __init__(self, toggle_listening_callback, quit_callback, feedback_callback, text_command_callback):
         super().__init__()
         self.logger = logging.getLogger(__name__)
         self.app = QApplication(sys.argv)
         self.app.setQuitOnLastWindowClosed(False)
         
-        self.start_listening_cb = start_listening_callback
+        self.toggle_listening_cb = toggle_listening_callback
         self.quit_cb = quit_callback
         self.feedback_cb = feedback_callback
         self.text_cmd_cb = text_command_callback
@@ -249,7 +308,7 @@ class UIEngine(QObject):
         self.show_overlay_action.triggered.connect(self._toggle_overlay)
         
         self.record_action = self.menu.addAction("Push to Talk (Ctrl + CapsLock)")
-        self.record_action.triggered.connect(self.start_listening_cb)
+        self.record_action.triggered.connect(self.toggle_listening_cb)
         self.menu.addSeparator()
         
         self.quit_action = self.menu.addAction("Quit")
@@ -257,7 +316,7 @@ class UIEngine(QObject):
         self.tray.setContextMenu(self.menu)
         
         # Floating overlay widget
-        self.overlay = OverlayWidget(start_cb=self.start_listening_cb)
+        self.overlay = OverlayWidget(toggle_cb=self.toggle_listening_cb)
         self.overlay.show()
         
         # Wire signals
@@ -290,9 +349,6 @@ class UIEngine(QObject):
     def _update_status_ui(self, msg):
         self.status_action.setText(f"Status: {msg}")
         self.overlay.set_status(msg)
-        # Only show balloon for important events, not every status change
-        if msg not in ["Idle", "Listening..."]:
-            self.tray.showMessage("Trixie", msg, QSystemTrayIcon.MessageIcon.Information, 2000)
 
     def set_status(self, msg):
         self.status_update.emit(msg)

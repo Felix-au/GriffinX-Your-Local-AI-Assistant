@@ -50,6 +50,15 @@ If you prefer not to use your voice, Trixie provides a direct typing interface:
 - Simply click, type your command (e.g., "open chrome" or "hello"), and press `Enter`.
 - Typed commands bypass the Whisper transcription step entirely and flow through the exact same Intent Cache and LLM logic as voice commands.
 
+## ⚪ Minimal Ball Mode
+
+If you want Trixie out of the way:
+- Click the **`-`** (minimize) button in the top right of the overlay to shrink Trixie into a small, floating 'T' ball.
+- In this mode, the typing interface is disabled, but voice commands remain active.
+- **Click the ball** once to manually start or stop listening.
+- When feedback is requested, the 👍/👎 buttons will orbit the left and right sides of the ball.
+- **Double-click the ball** to restore the full UI overlay.
+
 ## 🔍 Dynamic App Scanning
 
 Instead of relying on a hardcoded whitelist, Trixie scans your system dynamically:

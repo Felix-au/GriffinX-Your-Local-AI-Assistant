@@ -70,17 +70,30 @@ class OverlayWidget(QWidget):
     def toggle_ball_mode(self):
         self.is_ball_mode = not self.is_ball_mode
         if self.is_ball_mode:
-            self.setFixedSize(140, 60)
+            self.setFixedSize(140, 80)
             self.text_input.hide()
             self.btn_minimize.hide()
-            self.btn_up.setGeometry(10, 15, 30, 30)
-            self.btn_down.setGeometry(100, 15, 30, 30)
+            self.btn_up.setGeometry(10, 25, 30, 30)
+            self.btn_down.setGeometry(100, 25, 30, 30)
         else:
             self.setFixedSize(340, 310)
             self.text_input.show()
             self.btn_minimize.show()
             self.btn_up.setGeometry(self.width() - 80, 8, 30, 24)
             self.btn_down.setGeometry(self.width() - 40, 8, 30, 24)
+        self.update()
+        
+    def toggle_ball_text_input(self):
+        if not self.is_ball_mode:
+            return
+        if self.text_input.isVisible():
+            self.setFixedSize(140, 80)
+            self.text_input.hide()
+        else:
+            self.setFixedSize(140, 120)
+            self.text_input.setGeometry(10, 85, 120, 28)
+            self.text_input.show()
+            self.text_input.setFocus()
         self.update()
         
     def show_feedback_buttons(self):
@@ -94,6 +107,9 @@ class OverlayWidget(QWidget):
     def _pulse_tick(self):
         if self.status_text == "Listening...":
             self.pulse_phase = (self.pulse_phase + 3) % 360
+            self.update()
+        elif "Thinking" in self.status_text or "Executing" in self.status_text:
+            self.pulse_phase = (self.pulse_phase + 8) % 360
             self.update()
     
     def set_status(self, status):
@@ -115,8 +131,8 @@ class OverlayWidget(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         if self.is_ball_mode:
-            # Draw the ball overlay
-            grad = QLinearGradient(40, 0, 100, 60)
+            # Draw the ball overlay (shifted down by 10 to prevent clipping)
+            grad = QLinearGradient(40, 10, 100, 70)
             grad.setColorAt(0, QColor(90, 60, 200, 220))
             grad.setColorAt(1, QColor(40, 120, 220, 220))
             
@@ -126,15 +142,20 @@ class OverlayWidget(QWidget):
                 alpha = int(128 + 127 * math.sin(math.radians(self.pulse_phase)))
                 p.setBrush(QColor(0, 220, 100, alpha))
                 p.setPen(Qt.PenStyle.NoPen)
-                p.drawEllipse(35, -5, 70, 70)
+                p.drawEllipse(35, 5, 70, 70)
+            # Orange arc spinner if thinking/executing
+            elif "Thinking" in self.status_text or "Executing" in self.status_text:
+                p.setPen(QPen(QColor(255, 180, 0), 4))
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.drawArc(35, 5, 70, 70, self.pulse_phase * 16, 120 * 16)
                 
             p.setBrush(grad)
             p.setPen(QPen(QColor(255, 255, 255, 100), 2))
-            p.drawEllipse(40, 0, 60, 60)
+            p.drawEllipse(40, 10, 60, 60)
             
             p.setPen(QColor(255, 255, 255))
             p.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
-            p.drawText(40, 0, 60, 60, Qt.AlignmentFlag.AlignCenter, "T")
+            p.drawText(40, 10, 60, 60, Qt.AlignmentFlag.AlignCenter, "T")
             p.end()
             return
             
@@ -220,6 +241,8 @@ class OverlayWidget(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             self._drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             self._click_handled = False
+        elif event.button() == Qt.MouseButton.RightButton and self.is_ball_mode:
+            self.toggle_ball_text_input()
     
     def mouseMoveEvent(self, event):
         if self._drag_pos and event.buttons() & Qt.MouseButton.LeftButton:
@@ -321,6 +344,8 @@ class UIEngine(QObject):
         if text:
             self.overlay.text_input.clear()
             self.text_command_signal.emit(text)
+            if self.overlay.is_ball_mode:
+                self.overlay.toggle_ball_text_input()
         
     def _toggle_overlay(self):
         if self.overlay.isVisible():

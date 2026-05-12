@@ -55,8 +55,9 @@ If you prefer not to use your voice, Trixie provides a direct typing interface:
 
 If you want Trixie out of the way:
 - Click the **`-`** (minimize) button in the top right of the overlay to shrink Trixie into a small, floating 'T' ball.
-- In this mode, the typing interface is disabled, but voice commands remain active.
 - **Click the ball** once to manually start or stop listening.
+- **Right-click the ball** to reveal a quick-type text box directly underneath the ball. Type your command and press `Enter`!
+- When processing an intent, the ball displays a spinning orange loading arc.
 - When feedback is requested, the 👍/👎 buttons will orbit the left and right sides of the ball.
 - **Double-click the ball** to restore the full UI overlay.
 

@@ -1,0 +1,24 @@
+[project]
+name = "trixie"
+version = "1.0.0"
+description = "Trixie — Your PC, Your Voice, No Cloud."
+requires-python = ">=3.10"
+dependencies = [
+    "faster-whisper",
+    "llama-cpp-python",
+    "PyQt6",
+    "mss",
+    "Pillow",
+    "pyautogui",
+    "keyboard",
+    "sounddevice",
+    "numpy",
+    "scipy",
+    "pyttsx3",
+]
+
+[project.optional-dependencies]
+build = ["pyinstaller"]
+
+[dependency-groups]
+dev = []

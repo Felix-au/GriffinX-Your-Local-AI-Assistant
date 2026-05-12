@@ -1,0 +1,45 @@
+# ── Python ──────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+*.spec
+*.manifest
+
+# ── Virtual Environment ────────────────────────────
+venv/
+.venv/
+env/
+uv.lock
+
+# ── AI Model Weights (large binaries) ──────────────
+models/*.gguf
+models/*.bin
+models/*.pt
+models/*.safetensors
+
+# ── Logs & Database ────────────────────────────────
+logs/
+*.db
+*.db-journal
+
+# ── IDE / Editor ───────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS Artifacts ───────────────────────────────────
+Thumbs.db
+Desktop.ini
+.DS_Store
+ehthumbs.db
+
+# ── PyInstaller ────────────────────────────────────
+*.manifest
+*.spec

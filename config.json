@@ -1,0 +1,10 @@
+{
+    "db_path": "logs/history.db",
+    "model_paths": {
+        "whisper": "small.en",
+        "llm": "models/Qwen_Qwen3-4B-Q4_K_M.gguf"
+    },
+    "whisper_device": "auto",
+    "whisper_compute_type": "int8",
+    "cache_threshold": 0.80
+}

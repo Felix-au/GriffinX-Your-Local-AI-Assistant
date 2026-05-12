@@ -96,6 +96,10 @@ class DBManager:
         Find a cached intent where the transcription matches >= threshold.
         Returns (intent, target, matched_text) or None.
         """
+        # Increase threshold to 90% for short sentences (< 8 words)
+        word_count = len(transcription.split())
+        current_threshold = 0.90 if word_count < 8 else threshold
+        
         cursor = self.conn.cursor()
         cursor.execute('SELECT transcription, intent, target FROM intent_cache')
         
@@ -105,7 +109,7 @@ class DBManager:
         for row in cursor.fetchall():
             cached_text, intent, target = row
             ratio = SequenceMatcher(None, transcription.lower(), cached_text.lower()).ratio()
-            if ratio > best_ratio and ratio >= threshold:
+            if ratio > best_ratio and ratio >= current_threshold:
                 best_ratio = ratio
                 best_match = (intent, target, cached_text, ratio)
         

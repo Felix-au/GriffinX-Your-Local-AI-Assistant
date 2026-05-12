@@ -192,16 +192,26 @@ class TrixieApp:
             if self.audio.is_recording:
                 self.stop_listening_and_process()
 
+    def _handle_text_command(self, text):
+        """Handle text input from the UI."""
+        logger.info(f"User typed: {text}")
+        self.ui.set_transcript(text)
+        self.ui.set_status("Thinking...")
+        threading.Thread(target=self.process_command, args=(text,), daemon=True).start()
+
     def quit(self):
         logger.info("Quitting Trixie...")
         keyboard.unhook_all()
 
     def run(self):
+        """Start the keyboard listener and UI."""
+        logger.info("Trixie is starting...")
         keyboard.hook_key('caps lock', self.trigger_push_to_talk, suppress=True)
         self.ui = UIEngine(
             start_listening_callback=self.start_listening,
             quit_callback=self.quit,
-            feedback_callback=self._handle_feedback
+            feedback_callback=self._handle_feedback,
+            text_command_callback=self._handle_text_command
         )
         self.ui.run()
 

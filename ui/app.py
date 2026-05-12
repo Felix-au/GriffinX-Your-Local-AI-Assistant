@@ -2,7 +2,7 @@ import sys
 import os
 os.environ["QT_LOGGING_RULES"] = "qt.qpa.window=false"
 from PyQt6.QtWidgets import (QApplication, QSystemTrayIcon, QMenu, QWidget,
-                              QVBoxLayout, QHBoxLayout, QLabel, QPushButton)
+                              QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit)
 from PyQt6.QtGui import QIcon, QPixmap, QFont, QPainter, QColor, QLinearGradient, QPen
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QTimer, QPropertyAnimation, QEasingCurve, QRect
 import logging
@@ -26,11 +26,11 @@ class OverlayWidget(QWidget):
             Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setFixedSize(340, 280)
+        self.setFixedSize(340, 310)
         
         # Position bottom-right of screen
         screen = QApplication.primaryScreen().geometry()
-        self.move(screen.width() - 360, screen.height() - 340)
+        self.move(screen.width() - 360, screen.height() - 370)
         
         # Dragging state
         self._drag_pos = None
@@ -52,6 +52,12 @@ class OverlayWidget(QWidget):
         self.btn_down.setStyleSheet("background: transparent; color: white; font-size: 14px; border: none;")
         self.btn_down.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_down.hide()
+        
+        # Text input box for typing commands
+        self.text_input = QLineEdit(self)
+        self.text_input.setGeometry(16, self.height() - 36, self.width() - 32, 28)
+        self.text_input.setStyleSheet("background: rgba(40, 40, 60, 180); color: white; border: 1px solid rgba(80, 80, 120, 150); border-radius: 14px; padding: 0 12px;")
+        self.text_input.setPlaceholderText("Type a command and press Enter...")
         
     def show_feedback_buttons(self):
         self.btn_up.show()
@@ -197,8 +203,9 @@ class UIEngine(QObject):
     response_update = pyqtSignal(str)
     history_update = pyqtSignal(str)
     feedback_signal = pyqtSignal(str)
+    text_command_signal = pyqtSignal(str)
     
-    def __init__(self, start_listening_callback, quit_callback, feedback_callback):
+    def __init__(self, start_listening_callback, quit_callback, feedback_callback, text_command_callback):
         super().__init__()
         self.logger = logging.getLogger(__name__)
         self.app = QApplication(sys.argv)
@@ -207,6 +214,7 @@ class UIEngine(QObject):
         self.start_listening_cb = start_listening_callback
         self.quit_cb = quit_callback
         self.feedback_cb = feedback_callback
+        self.text_cmd_cb = text_command_callback
         
         # Create a branded icon (purple gradient circle)
         pixmap = QPixmap(32, 32)
@@ -258,10 +266,20 @@ class UIEngine(QObject):
         self.response_update.connect(self.overlay.set_response)
         self.history_update.connect(self.overlay.add_history)
         self.feedback_signal.connect(self.feedback_cb)
+        self.text_command_signal.connect(self.text_cmd_cb)
         
         # Connect buttons
         self.overlay.btn_up.clicked.connect(lambda: self.feedback_signal.emit("yes"))
         self.overlay.btn_down.clicked.connect(lambda: self.feedback_signal.emit("no"))
+        
+        # Connect text input
+        self.overlay.text_input.returnPressed.connect(self._handle_text_input)
+        
+    def _handle_text_input(self):
+        text = self.overlay.text_input.text().strip()
+        if text:
+            self.overlay.text_input.clear()
+            self.text_command_signal.emit(text)
         
     def _toggle_overlay(self):
         if self.overlay.isVisible():

@@ -39,8 +39,16 @@ Trixie learns from your corrections:
 1. You say "Open Notepad" → LLM classifies → executes `open_app:notepad`
 2. Trixie finishes and shows 👍/👎 buttons in the floating UI.
 3. You click **"👍"** → The mapping `"Open Notepad" → open_app:notepad` is cached.
-4. Next time you say "Open Notepad" (or anything ≥80% similar like "open note pad"):
+4. Next time you say "Open Notepad":
    - **Cache HIT ⚡** → instant execution, bypassing the 2.5GB LLM inference.
+   - *Note: To prevent false positives, commands under 8 words require a 90% similarity match, while longer commands require an 80% match.*
+
+## ⌨️ Typing Commands
+
+If you prefer not to use your voice, Trixie provides a direct typing interface:
+- A text input box is located at the bottom of the floating overlay.
+- Simply click, type your command (e.g., "open chrome" or "hello"), and press `Enter`.
+- Typed commands bypass the Whisper transcription step entirely and flow through the exact same Intent Cache and LLM logic as voice commands.
 
 ## 🔍 Dynamic App Scanning
 

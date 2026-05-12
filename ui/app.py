@@ -106,10 +106,10 @@ class OverlayWidget(QWidget):
         
     def _pulse_tick(self):
         if self.status_text == "Listening...":
-            self.pulse_phase = (self.pulse_phase + 3) % 360
+            self.pulse_phase = (self.pulse_phase + 6) % 360
             self.update()
         elif "Thinking" in self.status_text or "Executing" in self.status_text:
-            self.pulse_phase = (self.pulse_phase + 8) % 360
+            self.pulse_phase = (self.pulse_phase + 16) % 360
             self.update()
     
     def set_status(self, status):
@@ -140,14 +140,23 @@ class OverlayWidget(QWidget):
             if self.status_text == "Listening...":
                 import math
                 alpha = int(128 + 127 * math.sin(math.radians(self.pulse_phase)))
-                p.setBrush(QColor(0, 220, 100, alpha))
-                p.setPen(Qt.PenStyle.NoPen)
-                p.drawEllipse(35, 5, 70, 70)
-            # Orange arc spinner if thinking/executing
-            elif "Thinking" in self.status_text or "Executing" in self.status_text:
-                p.setPen(QPen(QColor(255, 180, 0), 4))
                 p.setBrush(Qt.BrushStyle.NoBrush)
-                p.drawArc(35, 5, 70, 70, self.pulse_phase * 16, 120 * 16)
+                # Outer soft neon glow
+                p.setPen(QPen(QColor(50, 255, 100, alpha // 3), 8))
+                p.drawEllipse(35, 5, 70, 70)
+                # Inner sharp neon ring
+                p.setPen(QPen(QColor(50, 255, 100, alpha), 2))
+                p.drawEllipse(35, 5, 70, 70)
+                
+            # Neon arc spinner if thinking/executing
+            elif "Thinking" in self.status_text or "Executing" in self.status_text:
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                # Outer soft neon glow arc
+                p.setPen(QPen(QColor(0, 255, 255, 60), 8))
+                p.drawArc(35, 5, 70, 70, self.pulse_phase * 16, 140 * 16)
+                # Inner sharp neon arc
+                p.setPen(QPen(QColor(0, 255, 255), 3))
+                p.drawArc(35, 5, 70, 70, self.pulse_phase * 16, 140 * 16)
                 
             p.setBrush(grad)
             p.setPen(QPen(QColor(255, 255, 255, 100), 2))

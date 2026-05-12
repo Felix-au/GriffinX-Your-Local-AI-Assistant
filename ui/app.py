@@ -19,6 +19,8 @@ class OverlayWidget(QWidget):
         self.response_text = ""
         self.history_lines = []
         self.is_ball_mode = False
+        self.ball_x = 40
+        self.ball_y = 10
         
         self.setWindowTitle("Trixie")
         self.setWindowFlags(
@@ -67,14 +69,38 @@ class OverlayWidget(QWidget):
         self.text_input.setStyleSheet("background: rgba(40, 40, 60, 180); color: white; border: 1px solid rgba(80, 80, 120, 150); border-radius: 14px; padding: 0 12px;")
         self.text_input.setPlaceholderText("Type a command and press Enter...")
         
+    def _update_ball_layout(self):
+        if not self.is_ball_mode:
+            return
+            
+        show_bubble = bool(self.response_text)
+        show_input = self.text_input.isVisible()
+        
+        new_w = 260 if show_bubble else 140
+        new_h = 80
+        self.ball_x = (new_w - 60) // 2
+        self.ball_y = 10
+        
+        if show_bubble:
+            new_h += 120
+            self.ball_y = 130
+            
+        if show_input:
+            new_h += 40
+            
+        self.setFixedSize(new_w, new_h)
+        self.btn_up.setGeometry(self.ball_x - 30, self.ball_y + 15, 30, 30)
+        self.btn_down.setGeometry(self.ball_x + 60, self.ball_y + 15, 30, 30)
+        
+        if show_input:
+            self.text_input.setGeometry(10, self.ball_y + 70, new_w - 20, 28)
+
     def toggle_ball_mode(self):
         self.is_ball_mode = not self.is_ball_mode
         if self.is_ball_mode:
-            self.setFixedSize(140, 80)
             self.text_input.hide()
             self.btn_minimize.hide()
-            self.btn_up.setGeometry(10, 25, 30, 30)
-            self.btn_down.setGeometry(100, 25, 30, 30)
+            self._update_ball_layout()
         else:
             self.setFixedSize(340, 310)
             self.text_input.show()
@@ -87,13 +113,11 @@ class OverlayWidget(QWidget):
         if not self.is_ball_mode:
             return
         if self.text_input.isVisible():
-            self.setFixedSize(140, 80)
             self.text_input.hide()
         else:
-            self.setFixedSize(140, 120)
-            self.text_input.setGeometry(10, 85, 120, 28)
             self.text_input.show()
             self.text_input.setFocus()
+        self._update_ball_layout()
         self.update()
         
     def show_feedback_buttons(self):
@@ -122,8 +146,17 @@ class OverlayWidget(QWidget):
         
     def set_response(self, text):
         self.response_text = text
+        if self.is_ball_mode:
+            self._update_ball_layout()
+            # Clear response bubble after 8 seconds
+            QTimer.singleShot(8000, self.clear_response)
         self.update()
         
+    def clear_response(self):
+        self.response_text = ""
+        if self.is_ball_mode:
+            self._update_ball_layout()
+        self.update()
 
 
     def paintEvent(self, event):
@@ -131,10 +164,15 @@ class OverlayWidget(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         if self.is_ball_mode:
-            # Draw the ball overlay (shifted down by 10 to prevent clipping)
-            grad = QLinearGradient(40, 10, 100, 70)
+            # Draw the ball overlay
+            grad = QLinearGradient(self.ball_x, self.ball_y, self.ball_x + 60, self.ball_y + 60)
             grad.setColorAt(0, QColor(90, 60, 200, 220))
             grad.setColorAt(1, QColor(40, 120, 220, 220))
+            
+            bx = self.ball_x
+            by = self.ball_y
+            cx = bx - 5
+            cy = by - 5
             
             # Pulse if listening
             if self.status_text == "Listening...":
@@ -143,28 +181,63 @@ class OverlayWidget(QWidget):
                 p.setBrush(Qt.BrushStyle.NoBrush)
                 # Outer soft neon glow
                 p.setPen(QPen(QColor(50, 255, 100, alpha // 3), 8))
-                p.drawEllipse(35, 5, 70, 70)
+                p.drawEllipse(cx, cy, 70, 70)
                 # Inner sharp neon ring
                 p.setPen(QPen(QColor(50, 255, 100, alpha), 2))
-                p.drawEllipse(35, 5, 70, 70)
+                p.drawEllipse(cx, cy, 70, 70)
                 
             # Neon arc spinner if thinking/executing
             elif "Thinking" in self.status_text or "Executing" in self.status_text:
                 p.setBrush(Qt.BrushStyle.NoBrush)
                 # Outer soft neon glow arc
                 p.setPen(QPen(QColor(0, 255, 255, 60), 8))
-                p.drawArc(35, 5, 70, 70, self.pulse_phase * 16, 140 * 16)
+                p.drawArc(cx, cy, 70, 70, self.pulse_phase * 16, 140 * 16)
                 # Inner sharp neon arc
                 p.setPen(QPen(QColor(0, 255, 255), 3))
-                p.drawArc(35, 5, 70, 70, self.pulse_phase * 16, 140 * 16)
+                p.drawArc(cx, cy, 70, 70, self.pulse_phase * 16, 140 * 16)
                 
             p.setBrush(grad)
             p.setPen(QPen(QColor(255, 255, 255, 100), 2))
-            p.drawEllipse(40, 10, 60, 60)
+            p.drawEllipse(bx, by, 60, 60)
             
             p.setPen(QColor(255, 255, 255))
             p.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
-            p.drawText(40, 10, 60, 60, Qt.AlignmentFlag.AlignCenter, "T")
+            p.drawText(bx, by, 60, 60, Qt.AlignmentFlag.AlignCenter, "T")
+            
+            # Draw speech bubble if there is a response
+            if self.response_text:
+                p.setBrush(QColor(20, 20, 30, 230))
+                p.setPen(QPen(QColor(100, 220, 160, 180), 2))
+                
+                # Bubble rect: above the ball.
+                # ball_y is 130. Bubble from y=10 to 110.
+                bubble_rect = QRect(10, 10, self.width() - 20, by - 20)
+                p.drawRoundedRect(bubble_rect, 10, 10)
+                
+                # Draw small tail pointing to the ball
+                tail = [
+                    (self.width() // 2 - 10, bubble_rect.bottom()),
+                    (self.width() // 2 + 10, bubble_rect.bottom()),
+                    (self.width() // 2, bubble_rect.bottom() + 10)
+                ]
+                p.setBrush(QColor(20, 20, 30, 230))
+                p.setPen(Qt.PenStyle.NoPen)
+                # Quick polygon for tail
+                from PyQt6.QtGui import QPolygonF
+                from PyQt6.QtCore import QPointF
+                poly = QPolygonF([QPointF(x, y) for x, y in tail])
+                p.drawPolygon(poly)
+                # Redraw border lines to merge it (a bit hacky but works)
+                p.setPen(QPen(QColor(100, 220, 160, 180), 2))
+                p.drawLine(tail[0][0], tail[0][1], tail[2][0], tail[2][1])
+                p.drawLine(tail[1][0], tail[1][1], tail[2][0], tail[2][1])
+                
+                # Text inside bubble
+                p.setPen(QColor(200, 240, 210))
+                p.setFont(QFont("Segoe UI", 9))
+                text_rect = bubble_rect.adjusted(10, 10, -10, -10)
+                p.drawText(text_rect, Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, self.response_text)
+                
             p.end()
             return
             
@@ -261,13 +334,13 @@ class OverlayWidget(QWidget):
     def mouseReleaseEvent(self, event):
         if getattr(event, 'button', lambda: None)() == Qt.MouseButton.LeftButton:
             if not getattr(self, '_click_handled', True) and self.is_ball_mode:
-                if 40 <= event.pos().x() <= 100:
+                if self.ball_x <= event.pos().x() <= self.ball_x + 60 and self.ball_y <= event.pos().y() <= self.ball_y + 60:
                     self.toggle_cb()
             self._drag_pos = None
             
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.is_ball_mode:
-            if 40 <= event.pos().x() <= 100:
+            if self.ball_x <= event.pos().x() <= self.ball_x + 60 and self.ball_y <= event.pos().y() <= self.ball_y + 60:
                 self.toggle_ball_mode()
 
 

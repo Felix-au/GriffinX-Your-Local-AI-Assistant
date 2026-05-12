@@ -108,11 +108,7 @@ class OverlayWidget(QWidget):
         self.response_text = text
         self.update()
         
-    def add_history(self, line):
-        self.history_lines.insert(0, line)
-        if len(self.history_lines) > 3:
-            self.history_lines = self.history_lines[:3]
-        self.update()
+
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -218,18 +214,6 @@ class OverlayWidget(QWidget):
             p.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.response_text)
             y += rect.height() + 10
         
-        # History section
-        if self.history_lines:
-            p.setPen(QPen(QColor(60, 60, 90), 1))
-            p.drawLine(16, y, self.width() - 16, y)
-            y += 16
-            p.setFont(QFont("Segoe UI", 8))
-            p.setPen(QColor(100, 100, 130))
-            for line in self.history_lines:
-                rect = p.boundingRect(QRect(16, y, self.width() - 32, 40), Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, line)
-                p.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, line)
-                y += rect.height() + 5
-        
         p.end()
     
     def mousePressEvent(self, event):
@@ -260,7 +244,6 @@ class UIEngine(QObject):
     status_update = pyqtSignal(str)
     transcript_update = pyqtSignal(str)
     response_update = pyqtSignal(str)
-    history_update = pyqtSignal(str)
     feedback_signal = pyqtSignal(str)
     text_command_signal = pyqtSignal(str)
     
@@ -323,7 +306,6 @@ class UIEngine(QObject):
         self.status_update.connect(self._update_status_ui)
         self.transcript_update.connect(self.overlay.set_transcript)
         self.response_update.connect(self.overlay.set_response)
-        self.history_update.connect(self.overlay.add_history)
         self.feedback_signal.connect(self.feedback_cb)
         self.text_command_signal.connect(self.text_cmd_cb)
         
@@ -359,8 +341,7 @@ class UIEngine(QObject):
     def set_response(self, text):
         self.response_update.emit(text)
     
-    def add_history(self, line):
-        self.history_update.emit(line)
+
 
     def show_feedback_buttons(self):
         self.overlay.show_feedback_buttons()

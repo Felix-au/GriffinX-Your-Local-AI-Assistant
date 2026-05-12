@@ -166,8 +166,6 @@ class TrixieApp:
             self.ui.set_response(response_msg)
             self.tts.speak(response_msg[:200])
         
-        self.ui.add_history(f"✓ {intent}: {target or user_text[:30]}")
-        
         # Log to DB and get the row ID
         row_id = self.db.log_interaction(user_text, intent, intent_data, executed_actions, status)
         

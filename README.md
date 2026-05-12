@@ -49,6 +49,7 @@ If you prefer not to use your voice, Trixie provides a direct typing interface:
 - A text input box is located at the bottom of the floating overlay.
 - Simply click, type your command (e.g., "open chrome" or "hello"), and press `Enter`.
 - Typed commands bypass the Whisper transcription step entirely and flow through the exact same Intent Cache and LLM logic as voice commands.
+- *Note: To maintain a clean and distraction-free interface, the on-screen command execution history has been removed.*
 
 ## ⚪ Minimal Ball Mode
 

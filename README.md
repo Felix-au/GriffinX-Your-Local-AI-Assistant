@@ -37,10 +37,16 @@ main.py                  ← App orchestrator + feedback loop
 Trixie learns from your corrections:
 
 1. You say "Open Notepad" → LLM classifies → executes `open_app:notepad`
-2. Trixie asks: *"Was that correct?"*
-3. You say **"Yes"** → The mapping `"Open Notepad" → open_app:notepad` is cached
+2. Trixie finishes and shows 👍/👎 buttons in the floating UI.
+3. You click **"👍"** → The mapping `"Open Notepad" → open_app:notepad` is cached.
 4. Next time you say "Open Notepad" (or anything ≥80% similar like "open note pad"):
-   - **Cache HIT** → instant execution, no LLM inference needed
+   - **Cache HIT ⚡** → instant execution, bypassing the 2.5GB LLM inference.
+
+## 🔍 Dynamic App Scanning
+
+Instead of relying on a hardcoded whitelist, Trixie scans your system dynamically:
+- At startup, she scans `ProgramData`, `AppData`, and the `Desktop` for `.lnk` shortcuts.
+- This allows her to automatically discover and launch any installed software (like Chrome, Discord, or Steam) without needing exact file paths.
 
 ## 🚀 Setup
 

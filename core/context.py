@@ -15,6 +15,9 @@ class ContextManager:
             "Example 5: 'Run the macro my_setup' -> {\"intent\": \"macro_execution\", \"target\": \"my_setup\"}\n"
             "Example 6: 'Type hello world' -> {\"intent\": \"string_type\", \"target\": \"hello world\"}\n"
             "Example 7: 'Hello there' -> {\"intent\": \"general_query\", \"message\": \"Hello! How can I help you today?\"}\n"
+            "Example 8: 'Can you open Chrome?' -> {\"intent\": \"open_app\", \"target\": \"chrome\"}\n"
+            "Example 9: 'Open it' -> {\"intent\": \"open_app\", \"target\": \"chrome\"} (if context implies Chrome)\n"
+            "Rule: If the user asks a question that is actually a request to perform an action (e.g. 'Can you open...'), use the action intent (e.g. 'open_app'), NOT 'general_query'.\n"
             "Output only JSON."
         )
         

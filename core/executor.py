@@ -80,26 +80,28 @@ class CommandExecutor:
                             self.KNOWN_APPS[app_name] = f'"{full_path}"'
         
     def _resolve_app(self, target):
-        """Resolve a user-friendly app name to a safe executable path."""
+        """Resolve a user-friendly app name to an executable path or direct command."""
+        import os
         normalized = target.lower().strip()
         
-        # Direct whitelist match
+        # 1. Direct whitelist match (best for known shortcuts/exes)
         if normalized in self.KNOWN_APPS:
             return self.KNOWN_APPS[normalized]
         
-        # Check if target ends in .exe and exists on PATH
-        if normalized.endswith(".exe"):
-            resolved = shutil.which(normalized)
-            if resolved:
-                return resolved
-                
-        # Fuzzy match: check if any whitelist key is contained in target
+        # 2. Check if it's a direct path that exists
+        if os.path.exists(target):
+            return f'"{target}"'
+            
+        # 3. Fuzzy match in whitelist
         for key, exe in self.KNOWN_APPS.items():
             if key in normalized or normalized in key:
                 return exe
                 
-        return None
-        
+        # 4. Fallback: Return the target as-is. 
+        # This makes the app "all whitelisted" as the Windows 'start' command
+        # will attempt to open any string passed to it (URL, app, or command).
+        return target
+
     def execute(self, action_intent, target):
         """
         Executes a single action intent and returns the status.

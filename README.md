@@ -129,6 +129,15 @@ uv run python package.py
 | "Run the macro setup" | `macro_execution` | Replays the saved macro |
 | "What is the capital of France?" | `general_query` | Answers via LLM + TTS |
 
+## 🚀 Global App Access
+
+Trixie is no longer restricted to a hardcoded whitelist. She uses the **Windows `start` command** logic, which means:
+- **Any App:** "Open Steam", "Launch Photoshop", etc.
+- **Any File:** "Open C:\projects\todo.txt"
+- **Any URL:** "Open youtube.com"
+
+If an app isn't explicitly in her common list, she will attempt to find it on your system's `PATH` or open it via the default Windows association.
+
 ## 📄 License
 
 MIT

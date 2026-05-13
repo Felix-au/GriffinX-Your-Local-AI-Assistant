@@ -37,8 +37,11 @@ class TTSEngine:
             try:
                 # Synthesize to raw PCM bytes
                 audio_bytes = b""
-                for audio_data in self.voice.synthesize(text):
-                    audio_bytes += audio_data
+                for chunk in self.voice.synthesize(text):
+                    if hasattr(chunk, "audio"):
+                        audio_bytes += chunk.audio
+                    else:
+                        audio_bytes += chunk
                 
                 # Convert PCM16 to float32 for sounddevice
                 audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0

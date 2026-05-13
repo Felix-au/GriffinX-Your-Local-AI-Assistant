@@ -152,7 +152,7 @@ class OverlayWidget(QWidget):
         if self.status_text == "Listening...":
             self.pulse_phase = (self.pulse_phase + 6) % 360
             self.update()
-        elif "Thinking" in self.status_text or "Executing" in self.status_text:
+        elif any(s in self.status_text for s in ["Thinking", "Executing", "Transcribing"]):
             self.pulse_phase = (self.pulse_phase + 16) % 360
             self.update()
     
@@ -212,14 +212,17 @@ class OverlayWidget(QWidget):
                 p.setPen(QPen(QColor(50, 255, 100, alpha), 2))
                 p.drawEllipse(cx, cy, 70, 70)
                 
-            # Neon arc spinner if thinking/executing
-            elif "Thinking" in self.status_text or "Executing" in self.status_text:
+            # Neon arc spinner if thinking/executing/transcribing
+            elif any(s in self.status_text for s in ["Thinking", "Executing", "Transcribing"]):
                 p.setBrush(Qt.BrushStyle.NoBrush)
+                # Green for transcribing, Cyan for thinking/executing
+                color = QColor(50, 255, 100) if "Transcribing" in self.status_text else QColor(0, 255, 255)
+                
                 # Outer soft neon glow arc
-                p.setPen(QPen(QColor(0, 255, 255, 60), 8))
+                p.setPen(QPen(QColor(color.red(), color.green(), color.blue(), 60), 8))
                 p.drawArc(cx, cy, 70, 70, self.pulse_phase * 16, 140 * 16)
                 # Inner sharp neon arc
-                p.setPen(QPen(QColor(0, 255, 255), 3))
+                p.setPen(QPen(color, 3))
                 p.drawArc(cx, cy, 70, 70, self.pulse_phase * 16, 140 * 16)
                 
             p.setBrush(grad)

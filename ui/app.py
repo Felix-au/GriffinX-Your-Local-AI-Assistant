@@ -162,6 +162,8 @@ class OverlayWidget(QWidget):
         
     def set_transcript(self, text):
         self.transcript_text = text
+        if not self.is_ball_mode:
+            self._update_expanded_layout()
         self.update()
         
     def set_response(self, text):
@@ -175,6 +177,8 @@ class OverlayWidget(QWidget):
             
             # Restart timer (stops previous if running)
             self.response_timer.start(duration_ms)
+        else:
+            self._update_expanded_layout()
             
         self.update()
         
@@ -182,7 +186,44 @@ class OverlayWidget(QWidget):
         self.response_text = ""
         if self.is_ball_mode:
             self._update_ball_layout()
+        else:
+            self._update_expanded_layout()
         self.update()
+
+    def _update_expanded_layout(self):
+        """Dynamically resize the expanded window upwards based on content."""
+        from PyQt6.QtGui import QFontMetrics
+        y = 95 # Start of chat area
+        
+        # Measure Transcript
+        if self.transcript_text:
+            metrics = QFontMetrics(QFont("Segoe UI", 10))
+            rect = metrics.boundingRect(QRect(0, 0, self.width() - 32, 2000), 
+                                       Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, 
+                                       self.transcript_text)
+            y += 14 + rect.height() + 12
+            
+        # Measure Response
+        if self.response_text:
+            metrics = QFontMetrics(QFont("Segoe UI", 10))
+            rect = metrics.boundingRect(QRect(0, 0, self.width() - 32, 2000), 
+                                       Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, 
+                                       self.response_text)
+            y += 14 + rect.height() + 12
+            
+        # Add space for the bottom input box (roughly 50px)
+        new_h = max(240, y + 50)
+        
+        old_h = self.height()
+        if new_h != old_h:
+            delta = new_h - old_h
+            # Grow/Shrink upwards by moving the Y position
+            self.setFixedSize(self.width(), new_h)
+            self.move(self.x(), self.y() - delta)
+            # Reposition internal buttons if needed (though they are anchored to width/height usually)
+            self.btn_minimize.setGeometry(self.width() - 30, 8, 20, 20)
+            self.text_input.setGeometry(16, self.height() - 36, self.width() - 32, 28)
+
 
 
     def paintEvent(self, event):

@@ -48,6 +48,11 @@ class OverlayWidget(QWidget):
         self.pulse_timer.timeout.connect(self._pulse_tick)
         self.pulse_timer.start(50)
         
+        # Response bubble auto-hide timer
+        self.response_timer = QTimer(self)
+        self.response_timer.setSingleShot(True)
+        self.response_timer.timeout.connect(self.clear_response)
+        
         # Minimize button
         self.btn_minimize = QPushButton("-", self)
         self.btn_minimize.setGeometry(self.width() - 30, 8, 20, 20)
@@ -163,8 +168,14 @@ class OverlayWidget(QWidget):
         self.response_text = text
         if self.is_ball_mode:
             self._update_ball_layout()
-            # Clear response bubble after 8 seconds
-            QTimer.singleShot(8000, self.clear_response)
+            
+            # Dynamic duration: 500ms per word, bounded by [5s, 15s]
+            word_count = len(text.split())
+            duration_ms = max(5000, min(15000, word_count * 500))
+            
+            # Restart timer (stops previous if running)
+            self.response_timer.start(duration_ms)
+            
         self.update()
         
     def clear_response(self):

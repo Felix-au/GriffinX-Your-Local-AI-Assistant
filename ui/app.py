@@ -326,13 +326,13 @@ class OverlayWidget(QWidget):
             small_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
             p.setFont(small_font)
             p.drawText(16, y, "YOU:")
-            y += 10 # Minimal gap below label
+            y += 15 # Move below the "YOU:" label
+            
             p.setPen(QColor(220, 220, 240))
             p.setFont(QFont("Segoe UI", 10))
-            
             rect = p.boundingRect(QRect(16, y, self.width() - 32, 200), Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.transcript_text)
             p.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.transcript_text)
-            y += rect.height() + 6 # Gap before next speaker
+            y += rect.height() + 20 # Large separation before next speaker
         
         # Response bubble
         if self.response_text:
@@ -340,13 +340,13 @@ class OverlayWidget(QWidget):
             small_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
             p.setFont(small_font)
             p.drawText(16, y, "TRIXIE:")
-            y += 10 # Minimal gap below label
+            y += 15 # Move below the "TRIXIE:" label
+            
             p.setPen(QColor(200, 240, 210))
             p.setFont(QFont("Segoe UI", 10))
-            
             rect = p.boundingRect(QRect(16, y, self.width() - 32, 200), Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.response_text)
             p.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.response_text)
-            y += rect.height() + 6
+            y += rect.height() + 10
         
         p.end()
     

@@ -38,10 +38,18 @@ class TTSEngine:
                 # Synthesize to raw PCM bytes
                 audio_bytes = b""
                 for chunk in self.voice.synthesize(text):
+                    # Robust handling of different Piper output formats
                     if hasattr(chunk, "audio"):
                         audio_bytes += chunk.audio
-                    else:
+                    elif isinstance(chunk, bytes):
                         audio_bytes += chunk
+                    else:
+                        # Direct attribute access fallback
+                        try:
+                            audio_bytes += chunk.audio
+                        except AttributeError:
+                            # Final fallback attempt
+                            audio_bytes += bytes(chunk)
                 
                 # Convert PCM16 to float32 for sounddevice
                 audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0

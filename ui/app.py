@@ -322,30 +322,30 @@ class OverlayWidget(QWidget):
         
         # Transcript bubble
         if self.transcript_text:
-            p.setPen(QColor(140, 160, 255))
-            small_font = QFont("Segoe UI", 8)
+            small_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
             p.setFont(small_font)
             p.drawText(16, y, "YOU:")
-            y += 16
+            y += 12
             p.setPen(QColor(220, 220, 240))
             p.setFont(QFont("Segoe UI", 9))
             
             rect = p.boundingRect(QRect(16, y, self.width() - 32, 200), Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.transcript_text)
             p.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.transcript_text)
-            y += rect.height() + 10
+            y += rect.height() + 6
         
         # Response bubble
         if self.response_text:
             p.setPen(QColor(100, 220, 160))
-            p.setFont(QFont("Segoe UI", 8))
+            small_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
+            p.setFont(small_font)
             p.drawText(16, y, "TRIXIE:")
-            y += 16
+            y += 12
             p.setPen(QColor(200, 240, 210))
             p.setFont(QFont("Segoe UI", 9))
             
             rect = p.boundingRect(QRect(16, y, self.width() - 32, 200), Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.response_text)
             p.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.response_text)
-            y += rect.height() + 10
+            y += rect.height() + 6
         
         p.end()
     

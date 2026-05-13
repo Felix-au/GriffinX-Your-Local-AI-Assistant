@@ -162,8 +162,14 @@ class OverlayWidget(QWidget):
         
     def set_transcript(self, text):
         self.transcript_text = text
+        # Clear old response immediately when a new prompt starts
+        if text:
+            self.response_text = ""
+            
         if not self.is_ball_mode:
             self._update_expanded_layout()
+        else:
+            self._update_ball_layout()
         self.update()
         
     def set_response(self, text):

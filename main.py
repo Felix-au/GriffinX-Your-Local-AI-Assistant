@@ -31,9 +31,9 @@ class TrixieApp:
         
         logger.info("Initializing Audio & LLM Engines...")
         self.audio = AudioEngine(
-            model_size=self.config.get("model_paths", {}).get("whisper", "small.en"),
+            model_size=self.config.get("model_paths", {}).get("whisper", "Systran/faster-distil-whisper-large-v3"),
             device=self.config.get("whisper_device", "auto"),
-            compute_type=self.config.get("whisper_compute_type", "int8")
+            compute_type=self.config.get("whisper_compute_type", "default")
         )
         self.llm = LLMEngine(
             model_path=self.config.get("model_paths", {}).get("llm", "models/Qwen_Qwen3-4B-Q4_K_M.gguf")

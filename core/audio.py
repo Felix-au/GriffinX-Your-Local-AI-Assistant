@@ -5,7 +5,7 @@ from faster_whisper import WhisperModel
 import logging
 
 class AudioEngine:
-    def __init__(self, model_size="tiny.en", device="auto", compute_type="int8"):
+    def __init__(self, model_size="Systran/faster-distil-whisper-large-v3", device="auto", compute_type="default"):
         self.logger = logging.getLogger(__name__)
         self.model_size = model_size
         self.device = device
@@ -89,7 +89,12 @@ class AudioEngine:
             self.logger.error("Whisper model not available for transcription.")
             return ""
             
-        segments, info = self.model.transcribe(audio_np, beam_size=5)
+        segments, info = self.model.transcribe(
+            audio_np, 
+            beam_size=5, 
+            vad_filter=True, 
+            vad_parameters=dict(min_silence_duration_ms=500)
+        )
         
         text_parts = []
         self.logger.info("Transcribing...")

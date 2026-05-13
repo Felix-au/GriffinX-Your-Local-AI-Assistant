@@ -38,6 +38,11 @@ class OverlayWidget(QWidget):
         # Dragging state
         self._drag_pos = None
         
+        # Click disambiguation timer
+        self._click_timer = QTimer(self)
+        self._click_timer.setSingleShot(True)
+        self._click_timer.timeout.connect(self.toggle_cb)
+        
         # Pulse animation timer
         self.pulse_timer = QTimer(self)
         self.pulse_timer.timeout.connect(self._pulse_tick)
@@ -335,12 +340,13 @@ class OverlayWidget(QWidget):
         if getattr(event, 'button', lambda: None)() == Qt.MouseButton.LeftButton:
             if not getattr(self, '_click_handled', True) and self.is_ball_mode:
                 if self.ball_x <= event.pos().x() <= self.ball_x + 60 and self.ball_y <= event.pos().y() <= self.ball_y + 60:
-                    self.toggle_cb()
+                    self._click_timer.start(250)
             self._drag_pos = None
             
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.is_ball_mode:
             if self.ball_x <= event.pos().x() <= self.ball_x + 60 and self.ball_y <= event.pos().y() <= self.ball_y + 60:
+                self._click_timer.stop()
                 self.toggle_ball_mode()
 
 

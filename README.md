@@ -60,7 +60,7 @@ If you want Trixie out of the way:
 - When processing an intent, the ball displays a rapid spinning neon cyan loading arc.
 - If Trixie responds to a general query (like "Hello"), a **dynamic speech bubble** will elegantly pop up above the ball, and automatically fade away after 8 seconds.
 - When feedback is requested, the 👍/👎 buttons will orbit the left and right sides of the ball.
-- **Double-click the ball** to restore the full UI overlay.
+- **Double-click the ball** to restore the full UI overlay. *(Note: Single clicks have a slight 250ms delay to safely distinguish them from double-clicks!)*
 
 ## 🔍 Dynamic App Scanning
 

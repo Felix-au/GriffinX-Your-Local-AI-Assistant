@@ -1,44 +1,52 @@
 import logging
 import threading
+import os
+import numpy as np
+import sounddevice as sd
+from piper.voice import PiperVoice
 
 class TTSEngine:
-    """Offline TTS using pyttsx3. Falls back silently if not installed."""
-    def __init__(self):
+    """High-quality local neural TTS using Piper."""
+    def __init__(self, model_path="models/en_US-lessac-medium.onnx"):
         self.logger = logging.getLogger(__name__)
-        self.engine = None
+        self.model_path = model_path
+        self.voice = None
         self.available = False
         self._init_engine()
     
     def _init_engine(self):
+        if not os.path.exists(self.model_path):
+            self.logger.warning(f"Piper model not found at {self.model_path}. TTS disabled.")
+            return
+            
         try:
-            import comtypes.client
-            comtypes.client.gen_dir = None
-            import pyttsx3
-            self.engine = pyttsx3.init()
-            self.engine.setProperty('rate', 175)
-            self.engine.setProperty('volume', 0.9)
-            voices = self.engine.getProperty('voices')
-            for voice in voices:
-                if 'female' in voice.name.lower() or 'zira' in voice.name.lower():
-                    self.engine.setProperty('voice', voice.id)
-                    break
+            # PiperVoice expects the config to be in the same dir with .json extension
+            self.voice = PiperVoice.load(self.model_path)
             self.available = True
-            self.logger.info("TTS engine initialized.")
-        except ImportError:
-            self.logger.warning("pyttsx3 not installed — TTS disabled.")
-            self.available = False
+            self.logger.info("Piper TTS engine initialized (Local Neural).")
         except Exception as e:
-            self.logger.error(f"TTS init failed: {e}")
+            self.logger.error(f"Piper TTS init failed: {e}")
             self.available = False
     
     def speak(self, text):
-        """Speak text asynchronously (non-blocking)."""
-        if not self.available or not self.engine:
+        """Speak text asynchronously using neural synthesis."""
+        if not self.available or not self.voice:
             return
+            
         def _run():
             try:
-                self.engine.say(text)
-                self.engine.runAndWait()
+                # Synthesize to raw PCM bytes
+                audio_bytes = b""
+                for audio_data in self.voice.synthesize(text):
+                    audio_bytes += audio_data
+                
+                # Convert PCM16 to float32 for sounddevice
+                audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+                
+                # Play via sounddevice
+                sd.play(audio_np, self.voice.config.sample_rate)
+                sd.wait()
             except Exception as e:
-                self.logger.error(f"TTS error: {e}")
+                self.logger.error(f"Piper TTS error: {e}")
+                
         threading.Thread(target=_run, daemon=True).start()

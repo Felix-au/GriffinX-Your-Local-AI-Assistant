@@ -66,8 +66,10 @@ If you want Trixie out of the way:
 
 Trixie is optimized for high-precision local voice control:
 - **Distil-Whisper V3:** Uses the latest distilled large-v3 model for maximum accuracy with CPU-friendly speeds.
+- **English-Only Mode:** Explicitly forced to English to eliminate language-detection latency and increase recognition stability.
 - **Intelligent VAD:** Built-in Voice Activity Detection filters out background noise and silence automatically.
 - **Context Priming:** Uses an initial prompt to help Whisper recognize "Trixie" and common commands even in noisy environments.
+- **Piper Neural TTS:** Replaced legacy Windows SAPI5 with the state-of-the-art Piper neural engine for natural, human-like voice responses locally.
 - **Optimized CPU Path:** Forces `int8` quantization and uses greedy decoding (`beam_size=1`) on CPUs to ensure snappy, near real-time responses even without a GPU.
 - **Seamless GPU Path:** Automatically detects if a CUDA GPU is available and switches to `float16` for maximum throughput on Nvidia rigs.
 

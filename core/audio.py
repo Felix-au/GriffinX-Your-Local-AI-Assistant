@@ -106,7 +106,8 @@ class AudioEngine:
             beam_size=1, 
             vad_filter=True, 
             vad_parameters=dict(min_silence_duration_ms=500),
-            initial_prompt="Trixie is a helpful AI assistant. Common commands include: open, close, run, type, hello."
+            initial_prompt="Trixie is a helpful AI assistant. Common commands include: open, close, run, type, hello.",
+            language="en"
         )
         
         text_parts = []

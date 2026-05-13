@@ -14,7 +14,8 @@ dependencies = [
     "sounddevice",
     "numpy",
     "scipy",
-    "pyttsx3",
+    "piper-tts",
+    "onnxruntime",
 ]
 
 [project.optional-dependencies]

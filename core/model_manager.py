@@ -12,6 +12,18 @@ MODEL_REGISTRY = {
         "url": "https://huggingface.co/bartowski/Qwen_Qwen3-4B-GGUF/resolve/main/Qwen_Qwen3-4B-Q4_K_M.gguf",
         "size_label": "~2.5 GB",
         "description": "Qwen 3 4B (Intent Classification & Chat)"
+    },
+    "tts_model": {
+        "filename": "en_US-lessac-medium.onnx",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/lessac/medium/en_US-lessac-medium.onnx",
+        "size_label": "~15 MB",
+        "description": "Piper TTS Voice Model (Neural)"
+    },
+    "tts_config": {
+        "filename": "en_US-lessac-medium.onnx.json",
+        "url": "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json",
+        "size_label": "~1 KB",
+        "description": "Piper TTS Voice Config"
     }
 }
 

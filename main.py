@@ -43,7 +43,12 @@ class TrixieApp:
         )
         
         logger.info("Initializing TTS, Executor & Macro Managers...")
-        self.tts = TTSEngine()
+        # Ensure Piper models
+        from core.model_manager import ensure_model
+        ensure_model("tts_config")
+        tts_model_path = ensure_model("tts_model")
+        
+        self.tts = TTSEngine(model_path=tts_model_path) if tts_model_path else TTSEngine()
         self.executor = CommandExecutor(self.db)
         self.macro_manager = MacroManager(self.db, self.executor)
         

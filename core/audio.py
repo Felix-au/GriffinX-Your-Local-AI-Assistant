@@ -89,12 +89,7 @@ class AudioEngine:
             self.logger.error("Whisper model not available for transcription.")
             return ""
             
-        segments, info = self.model.transcribe(
-            audio_np, 
-            beam_size=5,
-            vad_filter=True,
-            vad_parameters=dict(min_silence_duration_ms=500)
-        )
+        segments, info = self.model.transcribe(audio_np, beam_size=5)
         
         text_parts = []
         self.logger.info("Transcribing...")

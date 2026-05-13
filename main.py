@@ -14,6 +14,9 @@ from core.macro_manager import MacroManager
 from core.tts_engine import TTSEngine
 from ui.app import UIEngine
 
+# Suppress HF symlink warnings on Windows
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(name)s - %(message)s')
 logger = logging.getLogger("main")
 

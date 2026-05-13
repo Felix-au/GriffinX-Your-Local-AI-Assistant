@@ -62,6 +62,14 @@ If you want Trixie out of the way:
 - When feedback is requested, the 👍/👎 buttons will orbit the left and right sides of the ball.
 - **Double-click the ball** to restore the full UI overlay. *(Note: Single clicks have a slight 250ms delay to safely distinguish them from double-clicks!)*
 
+## 🎯 Accuracy & Performance
+
+Trixie is optimized for high-precision local voice control:
+- **Distil-Whisper V3:** Uses the latest distilled large-v3 model for maximum accuracy with CPU-friendly speeds.
+- **Intelligent VAD:** Built-in Voice Activity Detection filters out background noise and silence automatically.
+- **Context Priming:** Uses an initial prompt to help Whisper recognize "Trixie" and common commands (open, close, macro) even in noisy environments.
+- **Seamless Hardware Fallback:** Automatically detects if a CUDA GPU is available. It uses `float16` on Nvidia GPUs for lightning speed and `int8` on CPUs for efficient local execution.
+
 ## 🔍 Dynamic App Scanning
 
 Instead of relying on a hardcoded whitelist, Trixie scans your system dynamically:

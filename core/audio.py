@@ -93,7 +93,8 @@ class AudioEngine:
             audio_np, 
             beam_size=5, 
             vad_filter=True, 
-            vad_parameters=dict(min_silence_duration_ms=500)
+            vad_parameters=dict(min_silence_duration_ms=500),
+            initial_prompt="Trixie is a helpful AI assistant. Common commands include: open, close, run, type, hello."
         )
         
         text_parts = []

@@ -35,21 +35,27 @@ class TTSEngine:
             
         def _run():
             try:
-                # Synthesize to raw PCM bytes
-                audio_bytes = b""
-                for chunk in self.voice.synthesize(text):
-                    # Robust handling of different Piper output formats
-                    if hasattr(chunk, "audio"):
-                        audio_bytes += chunk.audio
-                    elif isinstance(chunk, bytes):
-                        audio_bytes += chunk
-                    else:
-                        # Direct attribute access fallback
-                        try:
-                            audio_bytes += chunk.audio
-                        except AttributeError:
-                            # Final fallback attempt
-                            audio_bytes += bytes(chunk)
+                import io
+                import wave
+                
+                # Use a BytesIO buffer to capture the synthesis as a WAV file
+                # This is the most robust way to handle all Piper versions
+                with io.BytesIO() as wav_io:
+                    with wave.open(wav_io, "wb") as wav_file:
+                        # Set WAV params (Piper medium models are 22050Hz, 16-bit, Mono)
+                        wav_file.setnchannels(1)
+                        wav_file.setsampwidth(2)
+                        wav_file.setframerate(self.voice.config.sample_rate)
+                        
+                        # Synthesize directly into the wav file object
+                        self.voice.synthesize(text, wav_file)
+                    
+                    wav_io.seek(0)
+                    # Load the PCM data from the buffer, skipping the 44-byte WAV header
+                    audio_bytes = wav_io.read()[44:]
+                
+                if not audio_bytes:
+                    return
                 
                 # Convert PCM16 to float32 for sounddevice
                 audio_np = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0

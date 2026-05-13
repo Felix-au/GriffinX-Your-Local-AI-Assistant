@@ -81,24 +81,34 @@ class OverlayWidget(QWidget):
         show_bubble = bool(self.response_text)
         show_input = self.text_input.isVisible()
         
-        new_w = 260 if show_bubble else 140
+        # Wider bubble for better readability
+        new_w = 300 if show_bubble else 140
         new_h = 80
         self.ball_x = (new_w - 60) // 2
         self.ball_y = 10
         
+        self.bubble_h = 0
         if show_bubble:
-            new_h += 120
-            self.ball_y = 130
+            from PyQt6.QtGui import QFontMetrics
+            font = QFont("Segoe UI", 10)
+            metrics = QFontMetrics(font)
+            # Available width is new_w - 40 (20px padding on each side)
+            rect = metrics.boundingRect(0, 0, new_w - 40, 1000, 
+                                       Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, 
+                                       self.response_text)
+            self.bubble_h = max(40, rect.height() + 25)
+            new_h += self.bubble_h + 20 # Tail and spacing
+            self.ball_y = self.bubble_h + 30
             
         if show_input:
-            new_h += 40
+            new_h += 45
             
         self.setFixedSize(new_w, new_h)
-        self.btn_up.setGeometry(self.ball_x - 30, self.ball_y + 15, 30, 30)
-        self.btn_down.setGeometry(self.ball_x + 60, self.ball_y + 15, 30, 30)
+        self.btn_up.setGeometry(self.ball_x - 35, self.ball_y + 15, 30, 30)
+        self.btn_down.setGeometry(self.ball_x + 65, self.ball_y + 15, 30, 30)
         
         if show_input:
-            self.text_input.setGeometry(10, self.ball_y + 70, new_w - 20, 28)
+            self.text_input.setGeometry(15, self.ball_y + 75, new_w - 30, 28)
 
     def toggle_ball_mode(self):
         self.is_ball_mode = not self.is_ball_mode
@@ -211,36 +221,37 @@ class OverlayWidget(QWidget):
             
             # Draw speech bubble if there is a response
             if self.response_text:
-                p.setBrush(QColor(20, 20, 30, 230))
-                p.setPen(QPen(QColor(100, 220, 160, 180), 2))
+                # More translucent background
+                p.setBrush(QColor(15, 15, 25, 160))
+                p.setPen(QPen(QColor(100, 220, 160, 150), 1.5))
                 
-                # Bubble rect: above the ball.
-                # ball_y is 130. Bubble from y=10 to 110.
-                bubble_rect = QRect(10, 10, self.width() - 20, by - 20)
-                p.drawRoundedRect(bubble_rect, 10, 10)
+                # Bubble rect: based on dynamic height
+                bubble_rect = QRect(10, 10, self.width() - 20, self.bubble_h)
+                p.drawRoundedRect(bubble_rect, 12, 12)
                 
                 # Draw small tail pointing to the ball
+                tail_base_y = bubble_rect.bottom()
                 tail = [
-                    (self.width() // 2 - 10, bubble_rect.bottom()),
-                    (self.width() // 2 + 10, bubble_rect.bottom()),
-                    (self.width() // 2, bubble_rect.bottom() + 10)
+                    (self.width() // 2 - 12, tail_base_y),
+                    (self.width() // 2 + 12, tail_base_y),
+                    (self.width() // 2, tail_base_y + 12)
                 ]
-                p.setBrush(QColor(20, 20, 30, 230))
+                p.setBrush(QColor(15, 15, 25, 160))
                 p.setPen(Qt.PenStyle.NoPen)
-                # Quick polygon for tail
                 from PyQt6.QtGui import QPolygonF
                 from PyQt6.QtCore import QPointF
                 poly = QPolygonF([QPointF(x, y) for x, y in tail])
                 p.drawPolygon(poly)
-                # Redraw border lines to merge it (a bit hacky but works)
-                p.setPen(QPen(QColor(100, 220, 160, 180), 2))
+                
+                # Redraw tail border
+                p.setPen(QPen(QColor(100, 220, 160, 150), 1.5))
                 p.drawLine(tail[0][0], tail[0][1], tail[2][0], tail[2][1])
                 p.drawLine(tail[1][0], tail[1][1], tail[2][0], tail[2][1])
                 
                 # Text inside bubble
-                p.setPen(QColor(200, 240, 210))
-                p.setFont(QFont("Segoe UI", 9))
-                text_rect = bubble_rect.adjusted(10, 10, -10, -10)
+                p.setPen(QColor(230, 250, 240))
+                p.setFont(QFont("Segoe UI", 10))
+                text_rect = bubble_rect.adjusted(12, 10, -12, -10)
                 p.drawText(text_rect, Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, self.response_text)
                 
             p.end()

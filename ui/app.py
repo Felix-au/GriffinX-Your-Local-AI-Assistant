@@ -29,11 +29,11 @@ class OverlayWidget(QWidget):
             Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setFixedSize(340, 160)
+        self.setFixedSize(340, 240)
         
         # Position bottom-right of screen
         screen = QApplication.primaryScreen().geometry()
-        self.move(screen.width() - 360, screen.height() - 220)
+        self.move(screen.width() - 360, screen.height() - 300)
         
         # Dragging state
         self._drag_pos = None
@@ -122,7 +122,7 @@ class OverlayWidget(QWidget):
             self.btn_minimize.hide()
             self._update_ball_layout()
         else:
-            self.setFixedSize(340, 160)
+            self.setFixedSize(340, 240)
             self.text_input.show()
             self.btn_minimize.show()
             self.btn_up.setGeometry(self.width() - 80, 8, 30, 24)

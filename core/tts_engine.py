@@ -1,44 +1,34 @@
 import logging
 import threading
+import subprocess
 
 class TTSEngine:
-    """Offline TTS using pyttsx3. Falls back silently if not installed."""
+    """Offline TTS using native Windows PowerShell System.Speech. Exceptionally reliable without COM cache issues."""
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.engine = None
-        self.available = False
-        self._init_engine()
-    
-    def _init_engine(self):
-        try:
-            import comtypes.client
-            comtypes.client.gen_dir = None
-            import pyttsx3
-            self.engine = pyttsx3.init()
-            self.engine.setProperty('rate', 175)
-            self.engine.setProperty('volume', 0.9)
-            voices = self.engine.getProperty('voices')
-            for voice in voices:
-                if 'female' in voice.name.lower() or 'zira' in voice.name.lower():
-                    self.engine.setProperty('voice', voice.id)
-                    break
-            self.available = True
-            self.logger.info("TTS engine initialized.")
-        except ImportError:
-            self.logger.warning("pyttsx3 not installed — TTS disabled.")
-            self.available = False
-        except Exception as e:
-            self.logger.error(f"TTS init failed: {e}")
-            self.available = False
+        self.available = True
+        self.logger.info("TTS engine (PowerShell System.Speech) initialized.")
     
     def speak(self, text):
         """Speak text asynchronously (non-blocking)."""
-        if not self.available or not self.engine:
+        if not self.available:
             return
+            
         def _run():
             try:
-                self.engine.say(text)
-                self.engine.runAndWait()
+                # Escape quotes for PowerShell
+                safe_text = text.replace('"', '""').replace("'", "''")
+                # Using System.Speech.Synthesis for built-in high quality local TTS
+                ps_script = (
+                    'Add-Type -AssemblyName System.Speech; '
+                    '$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; '
+                    '$synth.Rate = 1; '  # Slightly faster rate
+                    f'$synth.Speak("{safe_text}"); '
+                    '$synth.Dispose()'
+                )
+                subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], 
+                               creationflags=subprocess.CREATE_NO_WINDOW)
             except Exception as e:
                 self.logger.error(f"TTS error: {e}")
+                
         threading.Thread(target=_run, daemon=True).start()

@@ -20,12 +20,12 @@ A powerful, entirely local desktop AI assistant for Windows. Trixie interprets v
 ```
 main.py                  ← App orchestrator + feedback loop
 ├── core/
-│   ├── audio.py         ← Whisper STT (faster-whisper)
+│   ├── audio.py         ← Whisper STT (faster-whisper distil-large-v3 w/ VAD)
 │   ├── llm_engine.py    ← Qwen 3 4B intent classifier (llama.cpp)
 │   ├── context.py       ← System prompt + memory
 │   ├── executor.py      ← Whitelisted app/command execution
 │   ├── macro_manager.py ← Macro recording & replay
-│   ├── tts_engine.py    ← Offline text-to-speech (pyttsx3)
+│   ├── tts_engine.py    ← Offline text-to-speech (Native PowerShell System.Speech)
 │   ├── model_manager.py ← Runtime auto-download from HuggingFace
 │   └── db.py            ← SQLite (history + intent cache + macros)
 └── ui/

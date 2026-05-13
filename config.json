@@ -1,7 +1,7 @@
 {
     "db_path": "logs/history.db",
     "model_paths": {
-        "whisper": "small.en",
+        "whisper": "Systran/faster-distil-whisper-large-v3",
         "llm": "models/Qwen_Qwen3-4B-Q4_K_M.gguf"
     },
     "whisper_device": "auto",

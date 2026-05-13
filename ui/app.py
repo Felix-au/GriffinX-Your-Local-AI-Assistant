@@ -29,7 +29,7 @@ class OverlayWidget(QWidget):
             Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setFixedSize(340, 310)
+        self.setFixedSize(340, 260)
         
         # Position bottom-right of screen
         screen = QApplication.primaryScreen().geometry()
@@ -122,7 +122,7 @@ class OverlayWidget(QWidget):
             self.btn_minimize.hide()
             self._update_ball_layout()
         else:
-            self.setFixedSize(340, 310)
+            self.setFixedSize(340, 260)
             self.text_input.show()
             self.btn_minimize.show()
             self.btn_up.setGeometry(self.width() - 80, 8, 30, 24)
@@ -326,13 +326,13 @@ class OverlayWidget(QWidget):
             small_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
             p.setFont(small_font)
             p.drawText(16, y, "YOU:")
-            y += 15 # Move below the "YOU:" label
+            y += 12 # Move exactly below the label
             
             p.setPen(QColor(220, 220, 240))
             p.setFont(QFont("Segoe UI", 10))
             rect = p.boundingRect(QRect(16, y, self.width() - 32, 200), Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.transcript_text)
             p.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.transcript_text)
-            y += rect.height() + 20 # Large separation before next speaker
+            y += rect.height() + 12 # Separation between speakers
         
         # Response bubble
         if self.response_text:
@@ -340,13 +340,13 @@ class OverlayWidget(QWidget):
             small_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
             p.setFont(small_font)
             p.drawText(16, y, "TRIXIE:")
-            y += 15 # Move below the "TRIXIE:" label
+            y += 12 # Move exactly below the label
             
             p.setPen(QColor(200, 240, 210))
             p.setFont(QFont("Segoe UI", 10))
-            rect = p.boundingRect(QRect(16, y, self.width() - 32, 200), Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.response_text)
             p.drawText(rect, Qt.AlignmentFlag.AlignLeft | Qt.TextFlag.TextWordWrap, self.response_text)
             y += rect.height() + 10
+
         
         p.end()
     

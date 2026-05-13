@@ -20,9 +20,21 @@ class AudioEngine:
         
     def load_model(self):
         if not self.model:
-            self.logger.info(f"Loading Whisper model ({self.model_size})...")
+            import ctranslate2
+            
+            # Intelligent fallback for CPU/GPU
+            eff_device = self.device
+            eff_compute = self.compute_type
+            
+            if eff_device == "auto":
+                eff_device = "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
+            
+            if eff_compute == "default":
+                eff_compute = "float16" if eff_device == "cuda" else "int8"
+                
+            self.logger.info(f"Loading Whisper model ({self.model_size}) on {eff_device} ({eff_compute})...")
             try:
-                self.model = WhisperModel(self.model_size, device=self.device, compute_type=self.compute_type)
+                self.model = WhisperModel(self.model_size, device=eff_device, compute_type=eff_compute)
             except Exception as e:
                 self.logger.error(f"Failed to load Whisper model: {e}")
                 self.model = None
@@ -91,7 +103,7 @@ class AudioEngine:
             
         segments, info = self.model.transcribe(
             audio_np, 
-            beam_size=5, 
+            beam_size=1, 
             vad_filter=True, 
             vad_parameters=dict(min_silence_duration_ms=500),
             initial_prompt="Trixie is a helpful AI assistant. Common commands include: open, close, run, type, hello."

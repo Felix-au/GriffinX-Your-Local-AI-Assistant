@@ -4,6 +4,12 @@ Trixie is an AI-powered desktop assistant for Windows. It lives in your tray, li
 
 The core promise is simple: your command pipeline runs locally. Trixie uses local speech-to-text, a local LLM for intent classification, a local command executor, a local history database, and offline text-to-speech.
 
+## CPU-First Performance Model
+
+Trixie is CPU-first. It is meant to run on ordinary Windows machines without requiring a dedicated GPU.
+
+When CUDA is available, Trixie can use GPU acceleration to make transcription and model inference faster. When CUDA is not available, it uses CPU-friendly quantized settings instead. Any future model or pipeline change should preserve this rule: GPU support may improve speed, but lack of a GPU should not prevent the app from running.
+
 ## How It Works
 
 ```text
@@ -117,6 +123,15 @@ To prepare all models:
 ```powershell
 uv run python download_models.py
 ```
+
+## Hardware Expectations
+
+| Hardware | Behavior |
+|---|---|
+| CPU-only Windows PC | Supported baseline; slower inference, especially for voice transcription and first model load |
+| NVIDIA CUDA GPU | Optional acceleration path; uses faster compute settings when available |
+| No internet | Works only after models are already downloaded or shipped in `models/` |
+| 16 GB RAM | Recommended for smoother local model loading |
 
 ## Troubleshooting
 

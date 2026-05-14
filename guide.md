@@ -2,6 +2,12 @@
 
 Trixie is a local Windows voice assistant for controlling your PC. Hold a hotkey, speak naturally, and Trixie transcribes your command, figures out the intent, executes the action, and learns from your feedback.
 
+## CPU-First Promise
+
+Trixie is built to work without a GPU. CPU mode is the compatibility baseline.
+
+If your machine has a compatible NVIDIA GPU, Trixie can use it to run faster. If no GPU is available, the app should continue on CPU with quantized local models. Expect CPU inference to be slower, especially on first load, but it should not break just because the machine has no GPU.
+
 ## Run From Source
 
 Prerequisites:
@@ -9,6 +15,7 @@ Prerequisites:
 - Windows 10/11
 - Python 3.10+
 - `uv`
+- GPU optional
 
 ```powershell
 uv sync
@@ -70,6 +77,7 @@ Click the minimize button on the overlay to shrink Trixie into a floating `T` ba
 ## First-Run Notes
 
 - The first voice command can be slow because the STT model downloads and loads.
+- CPU-only machines are supported; GPU acceleration is only a speed upgrade.
 - Internet is needed only for downloading missing models.
 - Runtime command processing is local after the models are present.
 - If transcription accuracy feels off, test the microphone level and background noise first.

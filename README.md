@@ -4,6 +4,12 @@ Trixie is a Windows desktop assistant that lets you control your PC with your vo
 
 No cloud is required for normal use. Model files are downloaded on first run and then loaded from the local `models/` folder.
 
+## CPU-First Design
+
+Trixie is designed to run on CPU by default. A GPU is optional, not required.
+
+The project should remain usable on a regular Windows machine without CUDA. If a compatible NVIDIA GPU is available, Trixie can use it for faster Whisper and LLM inference; if not, it falls back to CPU execution with quantized settings. GPU acceleration should improve speed, but CPU compatibility is the baseline.
+
 ## Why Trixie?
 
 Most AI assistants either live in a browser or depend on cloud APIs. Trixie is built for direct desktop control:
@@ -70,6 +76,7 @@ Requirements:
 - Python 3.10+
 - `uv`
 - 16 GB RAM recommended
+- GPU optional; CPU mode is supported and expected
 
 Install dependencies:
 
@@ -125,7 +132,7 @@ Runtime settings live in [config.json](config.json):
 }
 ```
 
-On CUDA systems, Trixie uses `float16`. On CPU, it uses `int8`.
+On CUDA systems, Trixie uses `float16` for speed. On CPU, it uses `int8` so the app remains practical without a GPU.
 
 ## Privacy
 

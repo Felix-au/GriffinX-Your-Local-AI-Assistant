@@ -27,6 +27,7 @@ class OverlayWidget(QWidget):
         self.response_text = ""
         self.history_lines = []
         self.is_ball_mode = False
+        self.ball_size = 66  # 10% larger than original 60
         self.ball_x = 40
         self.ball_y = 10
         
@@ -36,7 +37,7 @@ class OverlayWidget(QWidget):
         if os.path.exists(circular_path):
             pm = QPixmap(circular_path)
             if not pm.isNull():
-                self.ball_pixmap = pm.scaled(60, 60, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+                self.ball_pixmap = pm.scaled(self.ball_size, self.ball_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         
         self.setWindowTitle("Trixie: Your Local AI Assistant")
         self.setWindowFlags(
@@ -50,11 +51,19 @@ class OverlayWidget(QWidget):
         ico_path = _resolve_asset_path("trixie.ico")
         if os.path.exists(ico_path):
             self.setWindowIcon(QIcon(ico_path))
-        self.setFixedSize(340, 240)
+        self.setFixedSize(340, 260)
+        
+        # Load logo for expanded header
+        self.logo_pixmap = None
+        logo_path = _resolve_asset_path("trixie.jpeg")
+        if os.path.exists(logo_path):
+            pm = QPixmap(logo_path)
+            if not pm.isNull():
+                self.logo_pixmap = pm.scaled(28, 28, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         
         # Position bottom-right of screen
         screen = QApplication.primaryScreen().geometry()
-        self.move(screen.width() - 360, screen.height() - 300)
+        self.move(screen.width() - 360, screen.height() - 320)
         
         # Dragging state
         self._drag_pos = None
@@ -103,14 +112,19 @@ class OverlayWidget(QWidget):
     def _update_ball_layout(self):
         if not self.is_ball_mode:
             return
-            
+        
+        # Suppress painting during geometry changes to prevent black box flicker
+        self.setUpdatesEnabled(False)
+        
+        old_pos = self.pos()
         show_bubble = bool(self.response_text)
         show_input = self.text_input.isVisible()
+        bs = self.ball_size
         
         # Wider bubble for better readability
-        new_w = 300 if show_bubble else 140
-        new_h = 80
-        self.ball_x = (new_w - 60) // 2
+        new_w = 300 if show_bubble else (bs + 80)
+        new_h = bs + 20
+        self.ball_x = (new_w - bs) // 2
         self.ball_y = 10
         
         self.bubble_h = 0
@@ -118,36 +132,46 @@ class OverlayWidget(QWidget):
             from PyQt6.QtGui import QFontMetrics
             font = QFont("Segoe UI", 10)
             metrics = QFontMetrics(font)
-            # Available width is new_w - 40 (20px padding on each side)
             rect = metrics.boundingRect(0, 0, new_w - 40, 1000, 
                                        Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, 
                                        self.response_text)
             self.bubble_h = max(40, rect.height() + 25)
-            new_h += self.bubble_h + 20 # Tail and spacing
+            new_h += self.bubble_h + 20
             self.ball_y = self.bubble_h + 30
             
         if show_input:
             new_h += 45
-            
-        self.setFixedSize(new_w, new_h)
+        
+        # Atomic geometry change — set size + position in one call to prevent jump
+        self.setMinimumSize(new_w, new_h)
+        self.setMaximumSize(new_w, new_h)
+        self.setGeometry(old_pos.x(), old_pos.y(), new_w, new_h)
+        
         self.btn_up.setGeometry(self.ball_x - 35, self.ball_y + 15, 30, 30)
-        self.btn_down.setGeometry(self.ball_x + 65, self.ball_y + 15, 30, 30)
+        self.btn_down.setGeometry(self.ball_x + bs + 5, self.ball_y + 15, 30, 30)
         
         if show_input:
-            self.text_input.setGeometry(15, self.ball_y + 75, new_w - 30, 28)
+            self.text_input.setGeometry(15, self.ball_y + bs + 15, new_w - 30, 28)
+        
+        self.setUpdatesEnabled(True)
 
     def toggle_ball_mode(self):
         self.is_ball_mode = not self.is_ball_mode
+        self.setUpdatesEnabled(False)
         if self.is_ball_mode:
             self.text_input.hide()
             self.btn_minimize.hide()
             self._update_ball_layout()
         else:
-            self.setFixedSize(340, 240)
+            old_pos = self.pos()
+            self.setMinimumSize(340, 260)
+            self.setMaximumSize(340, 260)
+            self.setGeometry(old_pos.x(), old_pos.y(), 340, 260)
             self.text_input.show()
             self.btn_minimize.show()
             self.btn_up.setGeometry(self.width() - 80, 8, 30, 24)
             self.btn_down.setGeometry(self.width() - 40, 8, 30, 24)
+        self.setUpdatesEnabled(True)
         self.update()
         
     def toggle_ball_text_input(self):
@@ -176,6 +200,10 @@ class OverlayWidget(QWidget):
         elif any(s in self.status_text for s in ["Thinking", "Executing", "Transcribing"]):
             self.pulse_phase = (self.pulse_phase + 16) % 360
             self.update()
+        elif self.is_ball_mode:
+            # Subtle idle breathing glow
+            self.pulse_phase = (self.pulse_phase + 5) % 360
+            self.update()
     
     def set_status(self, status):
         self.status_text = status
@@ -189,8 +217,7 @@ class OverlayWidget(QWidget):
             
         if not self.is_ball_mode:
             self._update_expanded_layout()
-        else:
-            self._update_ball_layout()
+        # In ball mode, transcript isn't displayed — just repaint, don't resize
         self.update()
         
     def set_response(self, text):
@@ -239,15 +266,17 @@ class OverlayWidget(QWidget):
             y += 14 + rect.height() + 12
             
         # Add space for the bottom input box (roughly 50px)
-        new_h = max(240, y + 50)
+        new_h = max(260, y + 50)
         
         old_h = self.height()
         if new_h != old_h:
+            old_pos = self.pos()
             delta = new_h - old_h
-            # Grow/Shrink upwards by moving the Y position
-            self.setFixedSize(self.width(), new_h)
-            self.move(self.x(), self.y() - delta)
-            # Reposition internal buttons if needed (though they are anchored to width/height usually)
+            # Atomic geometry change — grow/shrink upwards
+            self.setMinimumSize(self.width(), new_h)
+            self.setMaximumSize(self.width(), new_h)
+            self.setGeometry(old_pos.x(), old_pos.y() - delta, self.width(), new_h)
+            # Reposition internal buttons
             self.btn_minimize.setGeometry(self.width() - 30, 8, 20, 20)
             self.text_input.setGeometry(16, self.height() - 36, self.width() - 32, 28)
 
@@ -258,22 +287,24 @@ class OverlayWidget(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         if self.is_ball_mode:
+            import math
             bx = self.ball_x
             by = self.ball_y
-            cx = bx - 5
-            cy = by - 5
+            bs = self.ball_size
+            glow_size = bs + 14
+            cx = bx - 7
+            cy = by - 7
             
             # Pulse if listening
             if self.status_text == "Listening...":
-                import math
                 alpha = int(128 + 127 * math.sin(math.radians(self.pulse_phase)))
                 p.setBrush(Qt.BrushStyle.NoBrush)
                 # Outer soft neon glow
                 p.setPen(QPen(QColor(50, 255, 100, alpha // 3), 8))
-                p.drawEllipse(cx, cy, 70, 70)
+                p.drawEllipse(cx, cy, glow_size, glow_size)
                 # Inner sharp neon ring
                 p.setPen(QPen(QColor(50, 255, 100, alpha), 2))
-                p.drawEllipse(cx, cy, 70, 70)
+                p.drawEllipse(cx, cy, glow_size, glow_size)
                 
             # Neon arc spinner if thinking/executing/transcribing
             elif any(s in self.status_text for s in ["Thinking", "Executing", "Transcribing"]):
@@ -283,35 +314,42 @@ class OverlayWidget(QWidget):
                 
                 # Outer soft neon glow arc
                 p.setPen(QPen(QColor(color.red(), color.green(), color.blue(), 60), 8))
-                p.drawArc(cx, cy, 70, 70, self.pulse_phase * 16, 140 * 16)
+                p.drawArc(cx, cy, glow_size, glow_size, self.pulse_phase * 16, 140 * 16)
                 # Inner sharp neon arc
                 p.setPen(QPen(color, 3))
-                p.drawArc(cx, cy, 70, 70, self.pulse_phase * 16, 140 * 16)
+                p.drawArc(cx, cy, glow_size, glow_size, self.pulse_phase * 16, 140 * 16)
+            
+            else:
+                # Idle state: subtle breathing glow — bluish neon
+                breath_alpha = int(100 + 120 * math.sin(math.radians(self.pulse_phase)))
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(QColor(60, 140, 255, breath_alpha), 6))
+                p.drawEllipse(cx, cy, glow_size, glow_size)
             
             # Draw the ball — branded circular image or fallback gradient
             if self.ball_pixmap and not self.ball_pixmap.isNull():
                 # Clip to circle for clean edges
                 from PyQt6.QtGui import QPainterPath
                 clip_path = QPainterPath()
-                clip_path.addEllipse(float(bx), float(by), 60.0, 60.0)
+                clip_path.addEllipse(float(bx), float(by), float(bs), float(bs))
                 p.setClipPath(clip_path)
                 p.drawPixmap(bx, by, self.ball_pixmap)
                 p.setClipping(False)
                 # Subtle border ring
                 p.setBrush(Qt.BrushStyle.NoBrush)
                 p.setPen(QPen(QColor(255, 255, 255, 80), 2))
-                p.drawEllipse(bx, by, 60, 60)
+                p.drawEllipse(bx, by, bs, bs)
             else:
                 # Fallback: gradient ball with "T"
-                grad = QLinearGradient(bx, by, bx + 60, by + 60)
+                grad = QLinearGradient(bx, by, bx + bs, by + bs)
                 grad.setColorAt(0, QColor(90, 60, 200, 220))
                 grad.setColorAt(1, QColor(40, 120, 220, 220))
                 p.setBrush(grad)
                 p.setPen(QPen(QColor(255, 255, 255, 100), 2))
-                p.drawEllipse(bx, by, 60, 60)
+                p.drawEllipse(bx, by, bs, bs)
                 p.setPen(QColor(255, 255, 255))
-                p.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
-                p.drawText(bx, by, 60, 60, Qt.AlignmentFlag.AlignCenter, "T")
+                p.setFont(QFont("Segoe UI", 26, QFont.Weight.Bold))
+                p.drawText(bx, by, bs, bs, Qt.AlignmentFlag.AlignCenter, "T")
             
             # Draw speech bubble if there is a response
             if self.response_text:
@@ -356,20 +394,26 @@ class OverlayWidget(QWidget):
         p.setPen(QPen(QColor(80, 80, 120, 100), 1))
         p.drawRoundedRect(0, 0, self.width(), self.height(), 16, 16)
         
-        # Header bar gradient
+        # Header bar gradient — warm brownish tone
         grad = QLinearGradient(0, 0, self.width(), 0)
-        grad.setColorAt(0, QColor(90, 60, 200, 180))
-        grad.setColorAt(1, QColor(40, 120, 220, 180))
+        grad.setColorAt(0, QColor(120, 70, 30, 200))
+        grad.setColorAt(1, QColor(160, 100, 50, 190))
         p.setBrush(grad)
         p.setPen(Qt.PenStyle.NoPen)
         p.drawRoundedRect(0, 0, self.width(), 40, 16, 16)
         p.drawRect(0, 20, self.width(), 20)
         
-        # Title
+        # Logo in header
+        logo_x = 12
+        if self.logo_pixmap and not self.logo_pixmap.isNull():
+            p.drawPixmap(logo_x, 6, self.logo_pixmap)
+            logo_x += self.logo_pixmap.width() + 6
+        
+        # Title — full branding
         p.setPen(QColor(255, 255, 255))
-        title_font = QFont("Segoe UI", 11, QFont.Weight.Bold)
+        title_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
         p.setFont(title_font)
-        p.drawText(16, 26, "◉ Trixie")
+        p.drawText(logo_x, 26, "Trixie: Your Local AI Assistant")
         
         # Status indicator
         status_font = QFont("Segoe UI", 9)
@@ -445,13 +489,15 @@ class OverlayWidget(QWidget):
     def mouseReleaseEvent(self, event):
         if getattr(event, 'button', lambda: None)() == Qt.MouseButton.LeftButton:
             if not getattr(self, '_click_handled', True) and self.is_ball_mode:
-                if self.ball_x <= event.pos().x() <= self.ball_x + 60 and self.ball_y <= event.pos().y() <= self.ball_y + 60:
+                bs = self.ball_size
+                if self.ball_x <= event.pos().x() <= self.ball_x + bs and self.ball_y <= event.pos().y() <= self.ball_y + bs:
                     self._click_timer.start(250)
             self._drag_pos = None
             
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.is_ball_mode:
-            if self.ball_x <= event.pos().x() <= self.ball_x + 60 and self.ball_y <= event.pos().y() <= self.ball_y + 60:
+            bs = self.ball_size
+            if self.ball_x <= event.pos().x() <= self.ball_x + bs and self.ball_y <= event.pos().y() <= self.ball_y + bs:
                 self._click_timer.stop()
                 self.toggle_ball_mode()
 

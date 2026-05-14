@@ -1,4 +1,4 @@
-# Trixie Assistant — Deep Project Analysis
+# Trixie: Your Local AI Assistant - Deep Project Analysis
 
 ## 1. Executive Summary
 

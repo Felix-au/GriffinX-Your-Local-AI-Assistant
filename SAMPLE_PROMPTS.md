@@ -1,4 +1,4 @@
-# 🧠 Trixie Intent Classification: Sample Prompts
+# Trixie: Your Local AI Assistant - Intent Classification Sample Prompts
 
 This guide showcases how Trixie's Qwen 3 4B model translates natural language into executable JSON commands.
 

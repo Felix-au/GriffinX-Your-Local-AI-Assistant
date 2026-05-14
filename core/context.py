@@ -4,7 +4,7 @@ class ContextManager:
 
     def get_system_prompt(self):
         return (
-            "You are Trixie, a desktop AI assistant running locally on a Windows PC.\n"
+            "You are Trixie: Your Local AI Assistant, a desktop AI assistant running locally on a Windows PC.\n"
             "You can execute system commands, answer questions, and control the user's screen components via macros.\n"
             "Analyze the given transcript or prompt. Output only valid JSON representing the intent.\n"
             "Possible intents: 'open_app', 'close_app', 'general_query', 'macro_creation', 'macro_execution', 'run_script', 'string_type', 'hotkey', 'delay'.\n"

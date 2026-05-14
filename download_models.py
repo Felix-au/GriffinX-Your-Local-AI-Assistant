@@ -1,23 +1,27 @@
 """
 Trixie Model Downloader
-Downloads the LLM model from HuggingFace.
+Downloads runtime models from Hugging Face.
 Models also auto-download at runtime if missing.
 """
-from core.model_manager import ensure_model, MODEL_REGISTRY
+from core.model_manager import MODEL_REGISTRY, ensure_model
+
 
 def main():
     print("=" * 60)
-    print("  Trixie — Model Downloader")
-    print("  Your PC, Your Voice, No Cloud.")
+    print("  Trixie: Your Local AI Assistant")
+    print("  Model Downloader")
     print("=" * 60)
     print()
+
     for key, info in MODEL_REGISTRY.items():
-        print(f"  • {info['description']} ({info['size_label']})")
-    print("\n  Whisper STT downloads automatically on first boot.\n")
-    
-    path = ensure_model("llm")
-    status = "✅" if path else "❌"
-    print(f"\n  {status} {MODEL_REGISTRY['llm']['description']}: {path or 'FAILED'}\n")
+        print(f"  - {info['description']} ({info['size_label']})")
+
+    print()
+    for key in ("stt", "llm", "tts_model", "tts_config"):
+        path = ensure_model(key)
+        status = "OK" if path else "FAILED"
+        print(f"\n  [{status}] {MODEL_REGISTRY[key]['description']}: {path or 'FAILED'}")
+
 
 if __name__ == "__main__":
     main()

@@ -22,7 +22,7 @@ class OverlayWidget(QWidget):
         self.ball_x = 40
         self.ball_y = 10
         
-        self.setWindowTitle("Trixie")
+        self.setWindowTitle("Trixie: Your Local AI Assistant")
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint |
@@ -463,7 +463,7 @@ class UIEngine(QObject):
         self.tray = QSystemTrayIcon()
         self.tray.setIcon(self.icon)
         self.tray.setVisible(True)
-        self.tray.setToolTip("Trixie — Your PC, Your Voice, No Cloud.")
+        self.tray.setToolTip("Trixie: Your Local AI Assistant")
         
         # Tray menu
         self.menu = QMenu()

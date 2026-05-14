@@ -16,7 +16,7 @@ def package_app():
         "uv",
         "run",
         "pyinstaller",
-        "--name=TrixieAssistant",
+        "--name=Trixie",
         "--windowed", # Don't open a console window
         "--onefile",
         # Including core paths and data
@@ -38,7 +38,7 @@ def package_app():
     
     print("\nPackaging complete!")
     print("The executable is located in the 'dist' folder.")
-    print("Note: You must manually place the 'models' folder next to the generated .exe")
+    print("Note: Missing models download on first run, or you can place the 'models' folder next to the generated .exe.")
 
 if __name__ == "__main__":
     package_app()

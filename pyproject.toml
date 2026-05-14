@@ -1,10 +1,11 @@
 [project]
 name = "trixie"
 version = "1.0.0"
-description = "Trixie — Your PC, Your Voice, No Cloud."
+description = "Trixie: Your Local AI Assistant"
 requires-python = ">=3.10"
 dependencies = [
     "faster-whisper",
+    "huggingface-hub",
     "llama-cpp-python",
     "PyQt6",
     "mss",

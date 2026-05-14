@@ -21,6 +21,10 @@ models/*.gguf
 models/*.bin
 models/*.pt
 models/*.safetensors
+models/faster-whisper-*/
+models/sherpa-onnx-*/
+models/*.tar.bz2
+scratch/
 
 # ── Logs & Database ────────────────────────────────
 logs/

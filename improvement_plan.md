@@ -1,6 +1,6 @@
-# Trixie — Improvement Plan & Recommendations
+# Trixie: Your Local AI Assistant - Improvement Plan & Recommendations
 
-> **Trixie — Your PC, Your Voice, No Cloud.**
+> **Trixie: Your Local AI Assistant**
 
 ---
 
@@ -10,13 +10,13 @@ Here are my top picks — ranked by vibe:
 
 | # | Tagline | Tone |
 |---|---|---|
-| 🥇 | **Trixie — Your PC, Your Voice, No Cloud.** | Clean, confident, privacy-forward |
-| 🥈 | **Trixie — Speak. Control. Automate.** | Action-oriented, punchy |
-| 🥉 | **Trixie — The AI That Never Phones Home.** | Clever, personality-driven |
-| 4 | **Trixie — Local Intelligence, Total Control.** | Professional, enterprise-leaning |
-| 5 | **Trixie — Command Your Desktop, Privately.** | Direct and descriptive |
-| 6 | **Trixie — No Cloud. No Limits. Just You.** | Bold, aspirational |
-| 7 | **Trixie — Your Private Desktop Brain.** | Friendly, approachable |
+| 🥇 | **Trixie: Your Local AI Assistant** | Clean, confident, privacy-forward |
+| 🥈 | **Trixie: Your Local AI Assistant** | Action-oriented, privacy-forward |
+| 🥉 | **Trixie: Your Local AI Assistant** | Clever, personality-driven |
+| 4 | **Trixie: Your Local AI Assistant** | Professional, enterprise-leaning |
+| 5 | **Trixie: Your Local AI Assistant** | Direct and descriptive |
+| 6 | **Trixie: Your Local AI Assistant** | Bold, aspirational |
+| 7 | **Trixie: Your Local AI Assistant** | Friendly, approachable |
 
 ---
 

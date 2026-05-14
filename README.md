@@ -1,143 +1,136 @@
-# Trixie — Your PC, Your Voice, No Cloud.
+# Trixie: Your Local AI Assistant
 
-A powerful, entirely local desktop AI assistant for Windows. Trixie interprets voice commands, automates tasks, learns from your corrections, and speaks back — all running 100% offline.
+Trixie is a Windows desktop assistant that lets you control your PC with your voice while keeping inference local. It listens through push-to-talk, transcribes speech with a local Whisper model, classifies your intent with a local LLM, executes desktop actions, learns from feedback, and speaks back using offline neural text-to-speech.
 
-> **No cloud. No API keys. No data ever leaves your PC.**
+No cloud is required for normal use. Model files are downloaded on first run and then loaded from the local `models/` folder.
 
-## ✨ Features
+## Why Trixie?
 
-- **🎤 Voice Control** — Push-to-talk (`Ctrl + CapsLock`) with local Whisper STT
-- **🧠 Intent Classification** — Qwen 3 4B LLM classifies commands into actionable intents
-- **⚡ Smart Cache** — Verified commands skip LLM inference on repeat (80% match)
-- **🔁 Macro System** — Record action sequences, replay on demand
-- **🔊 Voice Response** — Offline TTS speaks results back
-- **💬 Feedback Loop** — Asks "was that correct?" and learns from your answers
-- **🖥️ Floating Overlay** — Glassmorphic HUD showing status, transcription, and response
-- **🔒 Privacy-First** — Every model runs locally. Zero network calls. Ever.
+Most AI assistants either live in a browser or depend on cloud APIs. Trixie is built for direct desktop control:
 
-## 🏗️ Architecture
+| Need | Trixie |
+|---|---|
+| Voice control | Push-to-talk command capture with local speech-to-text |
+| Privacy | Speech, intent parsing, history, and TTS stay on your machine |
+| Desktop actions | Open/close apps, type text, press hotkeys, run scripts, and replay macros |
+| Learning | Verified commands are cached so repeated actions get faster |
+| Offline use | Runtime models are local after the first download |
 
-```
-main.py                  ← App orchestrator + feedback loop
-├── core/
-│   ├── audio.py         ← Whisper STT (faster-whisper)
-│   ├── llm_engine.py    ← Qwen 3 4B intent classifier (llama.cpp)
-│   ├── context.py       ← System prompt + memory
-│   ├── executor.py      ← Whitelisted app/command execution
-│   ├── macro_manager.py ← Macro recording & replay
-│   ├── tts_engine.py    ← Offline text-to-speech (pyttsx3)
-│   ├── model_manager.py ← Runtime auto-download from HuggingFace
-│   └── db.py            ← SQLite (history + intent cache + macros)
-└── ui/
-    └── app.py           ← PyQt6 system tray + floating overlay
-```
+## Features
 
-## 🧠 Smart Intent Cache
+- Voice control with `Ctrl + CapsLock`
+- Local speech-to-text using `faster-whisper-medium.en`
+- Command vocabulary priming for better accented recognition of app names and actions
+- Local Qwen 3 4B intent classification through `llama.cpp`
+- Smart intent cache for repeated commands
+- Macro recording and replay
+- Offline Piper neural text-to-speech
+- Floating PyQt6 overlay with minimal ball mode
+- Dynamic app discovery from Windows shortcuts and app paths
+- First-run model downloader for STT, LLM, and TTS assets
 
-Trixie learns from your corrections:
+## Architecture
 
-1. You say "Open Notepad" → LLM classifies → executes `open_app:notepad`
-2. Trixie finishes and shows 👍/👎 buttons in the floating UI.
-3. You click **"👍"** → The mapping `"Open Notepad" → open_app:notepad` is cached.
-4. Next time you say "Open Notepad":
-   - **Cache HIT ⚡** → instant execution, bypassing the 2.5GB LLM inference.
-   - *Note: To prevent false positives, commands under 8 words require a 90% similarity match, while longer commands require an 80% match.*
-
-## ⌨️ Typing Commands
-
-If you prefer not to use your voice, Trixie provides a direct typing interface:
-- A text input box is located at the bottom of the floating overlay.
-- Simply click, type your command (e.g., "open chrome" or "hello"), and press `Enter`.
-- Typed commands bypass the Whisper transcription step entirely and flow through the exact same Intent Cache and LLM logic as voice commands.
-- *Note: To maintain a clean and distraction-free interface, the on-screen command execution history has been removed.*
-
-## ⚪ Minimal Ball Mode
-
-If you want Trixie out of the way:
-- Click the **`-`** (minimize) button in the top right of the overlay to shrink Trixie into a small, floating 'T' ball.
-- **Click the ball** once to manually start or stop listening. The ball will pulse with a fast neon green glow while listening.
-- **Right-click the ball** to reveal a quick-type text box directly underneath the ball. Type your command and press `Enter`!
-- When Trixie is **transcribing** your voice, she displays a rapid **spinning neon green** arc.
-- When she is **thinking or executing** an intent, the arc turns **neon cyan**.
-- If Trixie responds to a general query (like "Hello"), a **translucent, dynamically-sized speech bubble** will elegantly pop up above the ball. It automatically fades away after 5 to 15 seconds, depending on the length of the message.
-- When feedback is requested, the 👍/👎 buttons will orbit the left and right sides of the ball.
-- **Double-click the ball** to restore the full UI overlay. *(Note: Single clicks have a slight 250ms delay to safely distinguish them from double-clicks!)*
-
-## 🎯 Accuracy & Performance
-
-Trixie is optimized for high-precision local voice control:
-- **Distil-Whisper V3:** Uses the latest distilled large-v3 model for maximum accuracy with CPU-friendly speeds.
-- **English-Only Mode:** Explicitly forced to English to eliminate language-detection latency and increase recognition stability.
-- **Intelligent VAD:** Built-in Voice Activity Detection filters out background noise and silence automatically.
-- **Context Priming:** Uses an initial prompt to help Whisper recognize "Trixie" and common commands even in noisy environments.
-- **Piper Neural TTS:** Replaced legacy Windows SAPI5 with the state-of-the-art Piper neural engine for natural, human-like voice responses locally.
-- **Optimized CPU Path:** Forces `int8` quantization and uses greedy decoding (`beam_size=1`) on CPUs to ensure snappy, near real-time responses even without a GPU.
-- **Seamless GPU Path:** Automatically detects if a CUDA GPU is available and switches to `float16` for maximum throughput on Nvidia rigs.
-
-## 🔍 Dynamic App Scanning
-
-Instead of relying on a hardcoded whitelist, Trixie scans your system dynamically:
-- At startup, she scans `ProgramData`, `AppData`, and the `Desktop` for `.lnk` shortcuts.
-- This allows her to automatically discover and launch any installed software (like Chrome, Discord, or Steam) without needing exact file paths.
-
-## 🚀 Setup
-
-### 1. Requirements
-
-- Python 3.10+
-- [uv](https://docs.astral.sh/uv/) package manager
-- 16GB+ System RAM recommended
-
-### 2. Installation
-
-```bash
-uv sync
+```text
+main.py                  App orchestrator and feedback loop
+core/
+  audio.py               Microphone capture and faster-whisper STT
+  llm_engine.py          Local Qwen intent classifier
+  context.py             Prompt and short-term command memory
+  executor.py            Desktop action execution
+  macro_manager.py       Macro creation and replay
+  tts_engine.py          Offline Piper speech output
+  model_manager.py       Runtime model downloads
+  db.py                  SQLite history and intent cache
+ui/
+  app.py                 PyQt6 tray icon and floating overlay
 ```
 
-That's it. uv creates the `.venv`, resolves, and installs everything.
+## Model Downloads
 
-### 3. Running
+Trixie is intended to ship without large model files. On first use it downloads:
 
-```bash
-uv run python main.py
-```
+| Model | Purpose | Destination |
+|---|---|---|
+| Faster-Whisper Medium English | Speech-to-text | `models/faster-whisper-medium.en/` |
+| Qwen 3 4B GGUF | Intent classification and chat | `models/Qwen_Qwen3-4B-Q4_K_M.gguf` |
+| Piper Lessac voice | Text-to-speech | `models/en_US-lessac-medium.onnx` |
 
-On first run, the LLM model (~2.5 GB) downloads automatically from HuggingFace. Whisper downloads automatically on first voice command.
+You can pre-download everything with:
 
-### 4. Pre-download Models (optional)
-
-```bash
+```powershell
 uv run python download_models.py
 ```
 
-### 5. Packaging into `.exe`
+## Quick Start
 
-```bash
+Requirements:
+
+- Windows 10/11
+- Python 3.10+
+- `uv`
+- 16 GB RAM recommended
+
+Install dependencies:
+
+```powershell
+uv sync
+```
+
+Run Trixie:
+
+```powershell
+uv run python main.py
+```
+
+The first voice command may take time because the STT model downloads and loads. Later launches use the local copy.
+
+## Usage
+
+Hold `Ctrl + CapsLock` and say a command:
+
+```text
+Open Chrome
+Open Notepad
+Type hello world
+Press ctrl alt delete
+Create a macro called setup
+Run the macro setup
+What is the capital of France?
+```
+
+You can also type directly into the floating overlay and press `Enter`. Typed commands go through the same intent cache and LLM path as voice commands.
+
+## Build Standalone EXE
+
+```powershell
 uv sync --extra build
 uv run python package.py
 ```
 
-## 🎯 Supported Commands
+The executable is written to `dist/`. Large models are not bundled; first run downloads them into the local `models/` folder unless you ship that folder beside the app.
 
-| Voice Command | Intent | What It Does |
-|---|---|---|
-| "Open Notepad" | `open_app` | Launches the application |
-| "Close Chrome" | `close_app` | Force-kills the process |
-| "Type hello world" | `string_type` | Types the text via keyboard |
-| "Press ctrl+alt+delete" | `hotkey` | Sends the key combination |
-| "Create a macro called setup" | `macro_creation` | Saves recent actions as a macro |
-| "Run the macro setup" | `macro_execution` | Replays the saved macro |
-| "What is the capital of France?" | `general_query` | Answers via LLM + TTS |
+## Configuration
 
-## 🚀 Global App Access
+Runtime settings live in [config.json](config.json):
 
-Trixie is no longer restricted to a hardcoded whitelist. She uses the **Windows `start` command** logic, which means:
-- **Any App:** "Open Steam", "Launch Photoshop", etc.
-- **Any File:** "Open C:\projects\todo.txt"
-- **Any URL:** "Open youtube.com"
+```json
+{
+  "model_paths": {
+    "whisper": "models/faster-whisper-medium.en",
+    "llm": "models/Qwen_Qwen3-4B-Q4_K_M.gguf"
+  },
+  "whisper_device": "auto",
+  "whisper_compute_type": "default"
+}
+```
 
-If an app isn't explicitly in her common list, she will attempt to find it on your system's `PATH` or open it via the default Windows association.
+On CUDA systems, Trixie uses `float16`. On CPU, it uses `int8`.
 
-## 📄 License
+## Privacy
 
-MIT
+Trixie stores command history and feedback in a local SQLite database under `logs/`. Speech recognition, intent parsing, macro handling, and speech output run locally after model download.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

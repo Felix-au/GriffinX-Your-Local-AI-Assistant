@@ -3,9 +3,20 @@ import numpy as np
 import sounddevice as sd
 from faster_whisper import WhisperModel
 import logging
+from pathlib import Path
+from core.model_manager import ensure_model
+
+
+DEFAULT_STT_MODEL = "models/faster-whisper-medium.en"
+FALLBACK_STT_MODEL = "Systran/faster-whisper-medium.en"
+COMMAND_TRANSCRIPTION_PROMPT = (
+    "Trixie voice commands and app names: open Chrome, open Notepad, open File Explorer, "
+    "close Chrome, close Notepad, run, type hello world, press enter, shutdown, shut down, "
+    "cancel, stop, hello, Trixie."
+)
 
 class AudioEngine:
-    def __init__(self, model_size="Systran/faster-distil-whisper-large-v3", device="auto", compute_type="default"):
+    def __init__(self, model_size=DEFAULT_STT_MODEL, device="auto", compute_type="default"):
         self.logger = logging.getLogger(__name__)
         self.model_size = model_size
         self.device = device
@@ -32,9 +43,15 @@ class AudioEngine:
             if eff_compute == "default":
                 eff_compute = "float16" if eff_device == "cuda" else "int8"
                 
-            self.logger.info(f"Loading Whisper model ({self.model_size}) on {eff_device} ({eff_compute})...")
+            model_size = self.model_size
+            if model_size == DEFAULT_STT_MODEL and not Path(model_size).exists():
+                self.logger.info("Local STT model not found at %s; downloading...", DEFAULT_STT_MODEL)
+                downloaded = ensure_model("stt")
+                model_size = downloaded or FALLBACK_STT_MODEL
+
+            self.logger.info(f"Loading Whisper model ({model_size}) on {eff_device} ({eff_compute})...")
             try:
-                self.model = WhisperModel(self.model_size, device=eff_device, compute_type=eff_compute)
+                self.model = WhisperModel(model_size, device=eff_device, compute_type=eff_compute)
             except Exception as e:
                 self.logger.error(f"Failed to load Whisper model: {e}")
                 self.model = None
@@ -106,7 +123,7 @@ class AudioEngine:
             beam_size=1, 
             vad_filter=True, 
             vad_parameters=dict(min_silence_duration_ms=500),
-            initial_prompt="Trixie is a helpful AI assistant. Common commands include: open, close, run, type, hello.",
+            initial_prompt=COMMAND_TRANSCRIPTION_PROMPT,
             language="en"
         )
         

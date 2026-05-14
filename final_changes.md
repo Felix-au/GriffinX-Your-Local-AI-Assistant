@@ -1,4 +1,4 @@
-# Trixie — Final Changes Summary
+# Trixie: Your Local AI Assistant - Final Changes Summary
 
 All improvements from the plan have been implemented. Here is every change made across the project.
 
@@ -1162,7 +1162,7 @@ class UIEngine(QObject):
         self.tray = QSystemTrayIcon()
         self.tray.setIcon(self.icon)
         self.tray.setVisible(True)
-        self.tray.setToolTip("Trixie — Your PC, Your Voice, No Cloud.")
+        self.tray.setToolTip("Trixie: Your Local AI Assistant")
         
         # Tray menu
         self.menu = QMenu()

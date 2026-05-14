@@ -19,15 +19,17 @@ def package_app():
         "--name=Trixie",
         "--windowed", # Don't open a console window
         "--onefile",
+        "--icon=assets/trixie.ico",
         # Including core paths and data
         "--add-data=core;core",
         "--add-data=ui;ui",
+        "--add-data=assets;assets",
         # Adding hooks if needed
         "--hidden-import=keyboard",
         "--hidden-import=sounddevice",
         "--hidden-import=llama_cpp",
         "--hidden-import=faster_whisper",
-        "--hidden-import=pyttsx3",
+        "--hidden-import=piper",
         "--clean",
         "-y",
         "main.py"

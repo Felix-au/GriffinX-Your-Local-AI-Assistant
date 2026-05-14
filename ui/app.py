@@ -3,9 +3,17 @@ import os
 os.environ["QT_LOGGING_RULES"] = "qt.qpa.window=false"
 from PyQt6.QtWidgets import (QApplication, QSystemTrayIcon, QMenu, QWidget,
                               QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit)
-from PyQt6.QtGui import QIcon, QPixmap, QFont, QPainter, QColor, QLinearGradient, QPen
+from PyQt6.QtGui import QIcon, QPixmap, QFont, QPainter, QColor, QLinearGradient, QPen, QImage
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QTimer, QPropertyAnimation, QEasingCurve, QRect
 import logging
+
+def _resolve_asset_path(filename):
+    """Resolve an asset path that works in both dev and PyInstaller frozen mode."""
+    if getattr(sys, 'frozen', False):
+        base = sys._MEIPASS
+    else:
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, "assets", filename)
 
 class OverlayWidget(QWidget):
     """Floating translucent overlay showing Trixie's live status."""
@@ -22,6 +30,14 @@ class OverlayWidget(QWidget):
         self.ball_x = 40
         self.ball_y = 10
         
+        # Load branded assets
+        self.ball_pixmap = None
+        circular_path = _resolve_asset_path("trixie-circular.jpeg")
+        if os.path.exists(circular_path):
+            pm = QPixmap(circular_path)
+            if not pm.isNull():
+                self.ball_pixmap = pm.scaled(60, 60, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        
         self.setWindowTitle("Trixie: Your Local AI Assistant")
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
@@ -29,6 +45,11 @@ class OverlayWidget(QWidget):
             Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        
+        # Set window icon
+        ico_path = _resolve_asset_path("trixie.ico")
+        if os.path.exists(ico_path):
+            self.setWindowIcon(QIcon(ico_path))
         self.setFixedSize(340, 240)
         
         # Position bottom-right of screen
@@ -237,11 +258,6 @@ class OverlayWidget(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         if self.is_ball_mode:
-            # Draw the ball overlay
-            grad = QLinearGradient(self.ball_x, self.ball_y, self.ball_x + 60, self.ball_y + 60)
-            grad.setColorAt(0, QColor(90, 60, 200, 220))
-            grad.setColorAt(1, QColor(40, 120, 220, 220))
-            
             bx = self.ball_x
             by = self.ball_y
             cx = bx - 5
@@ -271,14 +287,31 @@ class OverlayWidget(QWidget):
                 # Inner sharp neon arc
                 p.setPen(QPen(color, 3))
                 p.drawArc(cx, cy, 70, 70, self.pulse_phase * 16, 140 * 16)
-                
-            p.setBrush(grad)
-            p.setPen(QPen(QColor(255, 255, 255, 100), 2))
-            p.drawEllipse(bx, by, 60, 60)
             
-            p.setPen(QColor(255, 255, 255))
-            p.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
-            p.drawText(bx, by, 60, 60, Qt.AlignmentFlag.AlignCenter, "T")
+            # Draw the ball — branded circular image or fallback gradient
+            if self.ball_pixmap and not self.ball_pixmap.isNull():
+                # Clip to circle for clean edges
+                from PyQt6.QtGui import QPainterPath
+                clip_path = QPainterPath()
+                clip_path.addEllipse(float(bx), float(by), 60.0, 60.0)
+                p.setClipPath(clip_path)
+                p.drawPixmap(bx, by, self.ball_pixmap)
+                p.setClipping(False)
+                # Subtle border ring
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(QColor(255, 255, 255, 80), 2))
+                p.drawEllipse(bx, by, 60, 60)
+            else:
+                # Fallback: gradient ball with "T"
+                grad = QLinearGradient(bx, by, bx + 60, by + 60)
+                grad.setColorAt(0, QColor(90, 60, 200, 220))
+                grad.setColorAt(1, QColor(40, 120, 220, 220))
+                p.setBrush(grad)
+                p.setPen(QPen(QColor(255, 255, 255, 100), 2))
+                p.drawEllipse(bx, by, 60, 60)
+                p.setPen(QColor(255, 255, 255))
+                p.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
+                p.drawText(bx, by, 60, 60, Qt.AlignmentFlag.AlignCenter, "T")
             
             # Draw speech bubble if there is a response
             if self.response_text:
@@ -442,22 +475,32 @@ class UIEngine(QObject):
         self.feedback_cb = feedback_callback
         self.text_cmd_cb = text_command_callback
         
-        # Create a branded icon (purple gradient circle)
-        pixmap = QPixmap(32, 32)
-        pixmap.fill(Qt.GlobalColor.transparent)
-        painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        grad = QLinearGradient(0, 0, 32, 32)
-        grad.setColorAt(0, QColor(90, 60, 200))
-        grad.setColorAt(1, QColor(40, 120, 220))
-        painter.setBrush(grad)
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawEllipse(2, 2, 28, 28)
-        painter.setPen(QColor(255, 255, 255))
-        painter.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "T")
-        painter.end()
-        self.icon = QIcon(pixmap)
+        # Load branded icon from assets
+        ico_path = _resolve_asset_path("trixie.ico")
+        circular_path = _resolve_asset_path("trixie-circular.jpeg")
+        
+        if os.path.exists(ico_path):
+            self.icon = QIcon(ico_path)
+            self.app.setWindowIcon(self.icon)
+        elif os.path.exists(circular_path):
+            self.icon = QIcon(circular_path)
+        else:
+            # Fallback: programmatic gradient icon
+            pixmap = QPixmap(32, 32)
+            pixmap.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            grad = QLinearGradient(0, 0, 32, 32)
+            grad.setColorAt(0, QColor(90, 60, 200))
+            grad.setColorAt(1, QColor(40, 120, 220))
+            painter.setBrush(grad)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawEllipse(2, 2, 28, 28)
+            painter.setPen(QColor(255, 255, 255))
+            painter.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+            painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "T")
+            painter.end()
+            self.icon = QIcon(pixmap)
         
         # System tray
         self.tray = QSystemTrayIcon()

@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="assets/trixie.jpeg" width="150" alt="Trixie Logo"/>
+</p>
 <h1 align="center">Trixie: Your Local AI Assistant</h1>
 <p align="center">
   <strong>Voice-controlled desktop assistant that runs entirely on your machine</strong><br/>
@@ -117,9 +120,9 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 | Feature | Description |
 |---|---|
 | **Floating Overlay** | Translucent glassmorphic panel — shows status, transcript, and response |
-| **Minimal Ball Mode** | Shrinks to a floating "T" ball with speech bubble responses |
+| **Minimal Ball Mode** | Shrinks to a branded floating ball (`trixie-circular.jpeg`) with speech bubble responses |
 | **Neon Animations** | Green pulse ring when listening; cyan arc spinner when thinking |
-| **System Tray** | Purple gradient tray icon with show/hide/quit context menu |
+| **System Tray** | Branded tray icon (`trixie.ico`) with show/hide/quit context menu |
 | **Text Input** | Type commands directly via the input box — bypasses STT |
 | **Feedback Buttons** | 👍/👎 buttons for training the intent cache |
 | **Dynamic Resize** | Overlay grows upward to fit long transcripts and responses |
@@ -371,6 +374,11 @@ Trixie/
 ├── ui/                          # PyQt6 GUI
 │   ├── __init__.py
 │   └── app.py                   # Floating overlay + system tray + UIEngine (546 lines)
+│
+├── assets/                      # Branded visual assets
+│   ├── trixie.ico               # Windows icon (EXE, taskbar, window title)
+│   ├── trixie.jpeg              # Logo image (README, documentation)
+│   └── trixie-circular.jpeg     # Circular avatar (floating ball, system tray)
 │
 ├── models/                      # Runtime model storage (auto-populated, gitignored)
 ├── logs/                        # SQLite database storage (gitignored)

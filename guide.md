@@ -99,7 +99,7 @@ Use the text box at the bottom of the floating overlay. Type a command and press
 
 ## 🔵 Minimal Ball Mode
 
-Click the **-** button on the overlay to shrink Trixie into a floating "T" ball.
+Click the **-** button on the overlay to shrink Trixie into a branded floating ball (using `trixie-circular.jpeg`).
 
 | Action | Effect |
 |---|---|

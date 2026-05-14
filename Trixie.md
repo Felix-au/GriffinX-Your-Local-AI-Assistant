@@ -364,7 +364,7 @@ The overlay is:
 
 ## UI Guide — Minimal Ball Mode
 
-Click the **-** button on the overlay to shrink Trixie into a floating "T" ball.
+Click the **-** button on the overlay to shrink Trixie into a branded floating ball (using `trixie-circular.jpeg`).
 
 ### Ball Interactions
 
@@ -379,7 +379,7 @@ Click the **-** button on the overlay to shrink Trixie into a floating "T" ball.
 
 | State | Animation |
 |---|---|
-| **Idle** | Static purple-blue gradient ball |
+| **Idle** | Static branded ball (`trixie-circular.jpeg`) |
 | **Listening** | Green pulsing neon ring |
 | **Transcribing** | Green arc spinner |
 | **Thinking / Executing** | Cyan arc spinner |
@@ -398,7 +398,7 @@ When Trixie responds in ball mode, a speech bubble appears above the ball with t
 
 ## System Tray
 
-The system tray icon is a purple gradient circle with a white "T". Right-click for:
+The system tray icon uses `trixie.ico` from the `assets/` folder. Right-click for:
 
 | Menu Item | Action |
 |---|---|

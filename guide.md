@@ -1,94 +1,163 @@
-# Trixie: Your Local AI Assistant - Quick Guide
+# Trixie: Your Local AI Assistant — Quick Guide
 
-Trixie is a local Windows voice assistant for controlling your PC. Hold a hotkey, speak naturally, and Trixie transcribes your command, figures out the intent, executes the action, and learns from your feedback.
+A voice-controlled Windows desktop assistant that runs entirely on your machine. Hold a hotkey, speak naturally, and Trixie transcribes, classifies, executes, and speaks back — all offline.
 
-## CPU-First Promise
+> [!IMPORTANT]
+> **Unlike cloud AI assistants** that require browser tabs, API keys, and internet access, Trixie runs **three local AI models** on your hardware: Faster-Whisper for speech recognition, Qwen 3 4B for intent classification, and Piper for text-to-speech. Your voice never leaves your machine.
 
-Trixie is built to work without a GPU. CPU mode is the compatibility baseline.
+## 🚀 How to Run
 
-If your machine has a compatible NVIDIA GPU, Trixie can use it to run faster. If no GPU is available, the app should continue on CPU with quantized local models. Expect CPU inference to be slower, especially on first load, but it should not break just because the machine has no GPU.
+### Option A — From Source (Development)
 
-## Run From Source
-
-Prerequisites:
-
-- Windows 10/11
-- Python 3.10+
-- `uv`
-- GPU optional
+**Prerequisites:** Windows 10/11, Python 3.10+, [`uv`](https://docs.astral.sh/uv/), 16 GB RAM recommended, GPU optional
 
 ```powershell
 uv sync
 uv run python main.py
 ```
 
-On first use, Trixie downloads its runtime models into `models/`. This can take a while, but later launches load from disk.
+On first launch, runtime models (~4 GB total) auto-download from HuggingFace. Subsequent launches load from the local `models/` folder.
 
-## Pre-Download Models
+### Option B — Standalone EXE
+
+Download `Trixie.exe` from [Releases](https://github.com/Felix-au/Trixie-Your-Local-AI-Assistant/releases) — no Python installation needed.
+
+```
+Just double-click Trixie.exe
+```
+
+> [!NOTE]
+> The EXE bundles all Python dependencies inside a single file. The AI models (~4 GB) are **not** bundled — they download automatically on first use and are cached locally in `models/`.
+
+## 🔧 GPU Acceleration (Optional)
+
+By default Trixie runs on CPU. For GPU-accelerated LLM inference:
+
+```powershell
+python install.py
+```
+
+This auto-detects your GPU (NVIDIA → CUDA, AMD/Intel → Vulkan) and rebuilds `llama-cpp-python` with the appropriate backend. Requires Visual Studio C++ Build Tools.
+
+## 📦 Pre-Download Models
 
 ```powershell
 uv run python download_models.py
 ```
 
-This downloads the speech-to-text, LLM, and text-to-speech models before launching the app.
+Downloads all three runtime models before launching, so the first command isn't slow:
 
-## Build The EXE
+| Model | Size | Purpose |
+|---|---|---|
+| Faster-Whisper Medium English | ~1.5 GB | Speech-to-text |
+| Qwen 3 4B (Q4_K_M GGUF) | ~2.5 GB | Intent classification & chat |
+| Piper Lessac Medium | ~15 MB | Text-to-speech |
+
+## 📦 Build the EXE
 
 ```powershell
 uv sync --extra build
 uv run python package.py
 ```
 
-The output appears in `dist/`. Models are not bundled into the single-file executable; they download on first run or can be shipped beside the app in `models/`.
+Output: `dist/Trixie.exe` — a fully self-contained executable.
 
-## How To Use
+**What's bundled:** All Python runtime + dependencies (llama-cpp-python, faster-whisper, PyQt6, piper-tts, etc.) + all core/ui modules.
 
-1. Launch Trixie.
-2. Wait for the floating overlay or tray icon.
-3. Hold `Ctrl + CapsLock`.
-4. Speak a command.
-5. Release the hotkey and let Trixie transcribe.
-6. Confirm whether the action was correct when feedback buttons appear.
+**What's NOT bundled (downloads on first run):** The ~4 GB of AI model files — cached at `models/` next to the executable. For offline distribution, ship the `models/` folder beside the EXE.
 
-Example commands:
+## 🎯 How to Use
+
+1. **Launch Trixie** — the floating overlay appears bottom-right and a system tray icon appears.
+2. **Hold `Ctrl + CapsLock`** — Trixie starts listening (green pulse animation).
+3. **Speak a command** — keep it short and direct.
+4. **Release the hotkey** — Trixie transcribes → classifies intent → executes the action.
+5. **Confirm with 👍/👎** — positive feedback caches the command for instant future use.
+6. **Hear the response** — Trixie speaks the result back via neural TTS.
+
+> [!NOTE]
+> Trixie auto-classifies your command into an intent (open app, type text, hotkey, macro, or question). You don't need to use any special syntax — just speak naturally.
+
+## 🗣️ Example Commands
 
 ```text
 Open Chrome
 Open Notepad
 Close Chrome
 Type hello world
-Press enter
-Create a macro called setup
-Run the macro setup
+Press ctrl s
+Press alt f4
+Create a macro called morning setup
+Run the macro morning setup
+What is the capital of France?
+Hello
 ```
 
-## Typing Instead Of Speaking
+## ⌨️ Typing Instead of Speaking
 
-Use the text box in the floating overlay. Type a command and press `Enter`. This bypasses speech-to-text but still uses the same intent engine and cache.
+Use the text box at the bottom of the floating overlay. Type a command and press `Enter`. This bypasses speech-to-text but uses the same intent engine and cache.
 
-## Minimal Ball Mode
+## 🔵 Minimal Ball Mode
 
-Click the minimize button on the overlay to shrink Trixie into a floating `T` ball.
+Click the **-** button on the overlay to shrink Trixie into a floating "T" ball.
 
-- Single-click the ball to start or stop listening.
-- Right-click the ball to show the quick text input.
-- Double-click the ball to restore the full overlay.
+| Action | Effect |
+|---|---|
+| **Single-click** the ball | Start/stop listening |
+| **Double-click** the ball | Restore the full overlay |
+| **Right-click** the ball | Show/hide the text input |
+| **Drag** the ball | Reposition anywhere on screen |
 
-## First-Run Notes
+Responses appear as a speech bubble above the ball, auto-hiding after a duration based on word count (5–15 seconds).
 
-- The first voice command can be slow because the STT model downloads and loads.
-- CPU-only machines are supported; GPU acceleration is only a speed upgrade.
-- Internet is needed only for downloading missing models.
-- Runtime command processing is local after the models are present.
-- If transcription accuracy feels off, test the microphone level and background noise first.
+## ⚡ Intent Cache (How Trixie Gets Faster)
 
-## Important Files
+When you confirm a command with 👍, Trixie caches the mapping:
+
+```
+"Open Chrome" → open_app:chrome
+```
+
+Next time you say anything similar (≥80% fuzzy match), the LLM is **completely skipped** — execution is instant. This is why Trixie gets faster the more you use it.
+
+## ⚙️ Configuration
+
+Runtime settings in [`config.json`](config.json):
+
+| Setting | Default | Description |
+|---|---|---|
+| `model_paths.whisper` | `models/faster-whisper-medium.en` | Path to Whisper model |
+| `model_paths.llm` | `models/Qwen_Qwen3-4B-Q4_K_M.gguf` | Path to GGUF model |
+| `whisper_device` | `auto` | `auto`, `cuda`, or `cpu` |
+| `whisper_compute_type` | `default` | `default`, `float16`, or `int8` |
+| `cache_threshold` | `0.80` | Fuzzy match threshold for cache hits |
+
+## ⚠️ Important Notes
+
+- **Windows-only** — keyboard hooks and app resolution use Windows-specific APIs.
+- **CPU-first design** — no GPU required. CUDA accelerates inference but is never mandatory.
+- **First launch is slow** — models (~4 GB) download from HuggingFace. Subsequent launches load from disk.
+- **First voice command is slow** — the Whisper model loads lazily on the first voice command (~5–10s on CPU).
+- **Microphone** — Trixie uses the Windows default input device via `sounddevice`. Check Sound Settings if no audio is captured.
+- **App resolution** — Trixie scans Start Menu and Desktop shortcuts on startup. Any installed app with a shortcut is discoverable.
+- **Safety** — Script execution is restricted to `.py` files. Delays are capped at 30 seconds. PyAutoGUI failsafe is enabled.
+- **Privacy** — All processing is local after model download. History stored in SQLite at `logs/history.db`.
+
+## 📁 Important Files
 
 | File | Purpose |
 |---|---|
-| `main.py` | App entry point |
-| `config.json` | Runtime model and Whisper settings |
-| `download_models.py` | Pre-downloads runtime models |
-| `core/audio.py` | Microphone capture and transcription |
-| `core/model_manager.py` | Model download logic |
-| `ui/app.py` | Floating overlay and tray UI |
+| `main.py` | App entry point and orchestrator |
+| `config.json` | Runtime model and device settings |
+| `download_models.py` | Pre-downloads all runtime models |
+| `install.py` | GPU-aware dependency installer |
+| `package.py` | PyInstaller build script |
+| `core/audio.py` | Microphone capture + Whisper STT |
+| `core/llm_engine.py` | Qwen 3 4B intent classifier |
+| `core/executor.py` | Desktop action execution + app resolution |
+| `core/tts_engine.py` | Piper neural TTS |
+| `core/db.py` | SQLite history, cache, and macros |
+| `core/macro_manager.py` | Macro creation, storage, and replay |
+| `core/context.py` | System prompt + short-term memory |
+| `core/model_manager.py` | Model download and caching |
+| `ui/app.py` | PyQt6 floating overlay + system tray |

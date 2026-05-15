@@ -45,4 +45,3 @@ ehthumbs.db
 
 # ── PyInstaller ────────────────────────────────────
 *.manifest
-*.spec

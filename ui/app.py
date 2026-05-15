@@ -563,7 +563,22 @@ class OverlayWidget(QWidget):
             self._drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             self._click_handled = False
         elif event.button() == Qt.MouseButton.RightButton and self.is_ball_mode:
-            self.toggle_ball_text_input()
+            # Context menu for ball mode
+            bs = self.ball_size
+            if self.ball_x <= event.pos().x() <= self.ball_x + bs and self.ball_y <= event.pos().y() <= self.ball_y + bs:
+                menu = QMenu(self)
+                menu.setStyleSheet(f"""
+                    QMenu {{ background-color: #1C1510; color: #F2EADB; border: 1px solid #5C4A30; }}
+                    QMenu::item:selected {{ background-color: #3D3222; }}
+                """)
+                dash_act = menu.addAction("Open Dashboard")
+                quit_act = menu.addAction("Quit Trixie")
+                
+                action = menu.exec(event.globalPosition().toPoint())
+                if action == dash_act:
+                    self.logo_clicked.emit()
+                elif action == quit_act:
+                    QApplication.quit()
     
     def mouseMoveEvent(self, event):
         # Update cursor when hovering over clickable areas
@@ -591,7 +606,7 @@ class OverlayWidget(QWidget):
                 elif self.is_ball_mode:
                     bs = self.ball_size
                     if self.ball_x <= event.pos().x() <= self.ball_x + bs and self.ball_y <= event.pos().y() <= self.ball_y + bs:
-                        self._click_timer.start(250)
+                        self.toggle_ball_text_input()
             self._drag_pos = None
             
     def mouseDoubleClickEvent(self, event):

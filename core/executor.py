@@ -3,6 +3,23 @@ import subprocess
 import logging
 import time
 import shutil
+import os
+
+
+def _launch(*args):
+    """Launch a subprocess fully detached from the parent process.
+    In a PyInstaller single-file EXE, child processes inherit the fake
+    stdout/stderr handles which causes them to block indefinitely.
+    DETACHED_PROCESS + DEVNULL streams prevent that.
+    """
+    return subprocess.Popen(
+        args,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        close_fds=True,
+        creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+    )
 
 class CommandExecutor:
     def __init__(self, db_manager):
@@ -114,33 +131,26 @@ class CommandExecutor:
             if action_intent == "open_app":
                 safe_target = self._resolve_app(target)
                 if safe_target:
-                    # Use shell=False for safety — no command injection possible
-                    if safe_target.startswith("ms-"):
-                        # Handle Windows URI protocol launches (ms-settings:, ms-teams:)
-                        subprocess.Popen(["cmd.exe", "/c", "start", "", safe_target])
-                    else:
-                        subprocess.Popen(["cmd.exe", "/c", "start", "", safe_target])
+                    _launch("cmd.exe", "/c", "start", "", safe_target)
                     return "Success"
                 else:
                     self.logger.warning(f"Unknown/blocked app target: {target}")
                     return f"Unknown app: {target}. Add it to the whitelist in executor.py if needed."
-                
+
             elif action_intent == "close_app":
                 safe_target = self._resolve_app(target)
                 if safe_target:
-                    # Extract just the exe filename for taskkill
-                    exe_name = safe_target.split("\\")[-1].split("/")[-1]
-                    subprocess.Popen(["taskkill", "/IM", exe_name, "/F"])
+                    exe_name = safe_target.split("\\")[-1].split("/")[-1].strip('"')
+                    _launch("taskkill", "/IM", exe_name, "/F")
                     return "Success"
                 else:
                     self.logger.warning(f"Unknown/blocked app target for close: {target}")
                     return f"Unknown app: {target}"
-                
+
             elif action_intent == "run_script":
-                # Only allow .py files in the project directory for safety
                 if not target.endswith(".py"):
                     return "Blocked: Only .py scripts are allowed"
-                subprocess.Popen(["python", target])
+                _launch("python", target)
                 return "Success"
                 
             elif action_intent == "string_type":

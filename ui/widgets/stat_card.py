@@ -68,7 +68,7 @@ class StatCard(QWidget):
         # Gradient card background
         grad = QLinearGradient(0, 0, self.width(), self.height())
         grad.setColorAt(0, QColor(COLORS["bg_card"]))
-        grad.setColorAt(1, QColor(28, 28, 50, 220))
+        grad.setColorAt(1, QColor(38, 30, 22, 220))
         p.setBrush(grad)
         p.setPen(QPen(QColor(COLORS["border"]), 1))
         p.drawRoundedRect(1, 1, self.width() - 2, self.height() - 2,

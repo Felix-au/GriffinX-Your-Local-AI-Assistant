@@ -15,7 +15,6 @@ class ModelCard(QWidget):
     def __init__(self, icon: str = "🧠", model_name: str = "", size_label: str = "", parent=None):
         super().__init__(parent)
         self.setMinimumSize(180, 90)
-        self.setMaximumHeight(100)
 
         self._status = "unknown"
 
@@ -33,8 +32,8 @@ class ModelCard(QWidget):
         self.name_lbl = QLabel(model_name)
         self.name_lbl.setFont(QFont(FONTS["family"], FONTS["size_sm"], QFont.Weight.Bold))
         self.name_lbl.setStyleSheet(f"color: {COLORS['text_primary']};")
-        top.addWidget(self.name_lbl)
-        top.addStretch()
+        self.name_lbl.setWordWrap(True)
+        top.addWidget(self.name_lbl, 1)
 
         # Status indicator
         self.status_lbl = QLabel("❓")
@@ -54,6 +53,7 @@ class ModelCard(QWidget):
         self.size_lbl = QLabel(size_label)
         self.size_lbl.setFont(QFont(FONTS["family"], FONTS["size_xs"]))
         self.size_lbl.setStyleSheet(f"color: {COLORS['text_muted']};")
+        self.size_lbl.setWordWrap(True)
         layout.addWidget(self.size_lbl)
 
     # ── Public API ─────────────────────────────────────────────
@@ -90,7 +90,7 @@ class ModelCard(QWidget):
 
         grad = QLinearGradient(0, 0, self.width(), self.height())
         grad.setColorAt(0, QColor(COLORS["bg_card"]))
-        grad.setColorAt(1, QColor(28, 28, 50, 220))
+        grad.setColorAt(1, QColor(38, 30, 22, 220))
         p.setBrush(grad)
         p.setPen(QPen(QColor(COLORS["border"]), 1))
         p.drawRoundedRect(1, 1, self.width() - 2, self.height() - 2,

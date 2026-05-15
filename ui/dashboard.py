@@ -6,9 +6,10 @@ from datetime import datetime
 
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QGroupBox, QCheckBox, QTextEdit, QStatusBar, QGridLayout, QFrame
+    QGroupBox, QCheckBox, QTextEdit, QStatusBar, QGridLayout, QFrame,
+    QPushButton, QLineEdit
 )
-from PySide6.QtGui import QFont, QIcon, QColor, QPixmap
+from PySide6.QtGui import QFont, QIcon, QColor, QPixmap, QKeySequence
 from PySide6.QtCore import Qt, Signal
 
 from ui.theme import COLORS, FONTS, DIMS, get_global_stylesheet
@@ -19,6 +20,48 @@ logger = logging.getLogger(__name__)
 
 # Max activity log entries
 _MAX_LOG = 100
+
+
+class HotkeyEdit(QLineEdit):
+    """Custom QLineEdit that captures key combinations (2-3 keys)."""
+
+    hotkey_changed = Signal(str)  # emits e.g. "ctrl+shift+t"
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setReadOnly(True)
+        self.setPlaceholderText("Click and press keys...")
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._keys = []
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        modifiers = event.modifiers()
+
+        parts = []
+        if modifiers & Qt.KeyboardModifier.ControlModifier:
+            parts.append("ctrl")
+        if modifiers & Qt.KeyboardModifier.ShiftModifier:
+            parts.append("shift")
+        if modifiers & Qt.KeyboardModifier.AltModifier:
+            parts.append("alt")
+
+        # Ignore lone modifier keys
+        if key in (Qt.Key.Key_Control, Qt.Key.Key_Shift, Qt.Key.Key_Alt, Qt.Key.Key_Meta):
+            return
+
+        key_name = QKeySequence(key).toString().lower()
+        if key_name and key_name not in parts:
+            parts.append(key_name)
+
+        if len(parts) >= 2:
+            combo = "+".join(parts)
+            self.setText(combo)
+            self.hotkey_changed.emit(combo)
+            self.clearFocus()
+
+    def set_hotkey(self, combo: str):
+        self.setText(combo)
 
 
 class DashboardWindow(QMainWindow):
@@ -130,10 +173,20 @@ class DashboardWindow(QMainWindow):
         self.chk_startup.toggled.connect(lambda v: self.setting_changed.emit("start_at_startup", v))
         settings_layout.addWidget(self.chk_startup)
 
-        self.chk_minimize = QCheckBox("Minimize to tray on close")
-        self.chk_minimize.setChecked(True)
-        self.chk_minimize.toggled.connect(lambda v: self.setting_changed.emit("minimize_to_tray", v))
-        settings_layout.addWidget(self.chk_minimize)
+        # Hotkey setting
+        hotkey_row = QHBoxLayout()
+        hotkey_lbl = QLabel("Push-to-talk hotkey:")
+        hotkey_lbl.setStyleSheet(f"color: {COLORS['text_primary']};")
+        hotkey_row.addWidget(hotkey_lbl)
+        self.hotkey_edit = HotkeyEdit()
+        self.hotkey_edit.setFixedWidth(180)
+        self.hotkey_edit.set_hotkey("ctrl+caps lock")
+        self.hotkey_edit.hotkey_changed.connect(
+            lambda v: self.setting_changed.emit("hotkey", v)
+        )
+        hotkey_row.addWidget(self.hotkey_edit)
+        hotkey_row.addStretch()
+        settings_layout.addLayout(hotkey_row)
 
         right.addWidget(settings_box, 1)
         root.addLayout(right, 2)
@@ -189,6 +242,8 @@ class DashboardWindow(QMainWindow):
         self.chk_startup.setChecked(settings.get("start_at_startup", True))
         self.chk_startup.blockSignals(False)
 
-        self.chk_minimize.blockSignals(True)
-        self.chk_minimize.setChecked(settings.get("minimize_to_tray", True))
-        self.chk_minimize.blockSignals(False)
+        # Apply hotkey display
+        hotkey = settings.get("hotkey", "ctrl+caps lock")
+        self.hotkey_edit.blockSignals(True)
+        self.hotkey_edit.set_hotkey(hotkey)
+        self.hotkey_edit.blockSignals(False)

@@ -5,26 +5,27 @@ Provides colors, fonts, dimensions, a global QSS stylesheet, and helpers.
 
 # ── Color Palette ───────────────────────────────────────────────
 COLORS = {
-    "bg_primary":     "#0E0E14",
-    "bg_secondary":   "#151520",
-    "bg_card":        "#1C1C2E",
-    "bg_card_hover":  "#24243C",
-    "bg_input":       "#121220",
-    "border":         "#2C2C44",
-    "border_accent":  "#3E3E5A",
-    "text_primary":   "#EAECF4",
-    "text_secondary": "#8A92A8",
-    "text_muted":     "#5C6478",
-    "accent_amber":   "#D4A044",
-    "accent_gold":    "#F0C060",
-    "accent_green":   "#10B981",
-    "accent_red":     "#EF4444",
-    "accent_orange":  "#F59E0B",
-    "accent_cyan":    "#00D4FF",
-    "gauge_track":    "#1E2436",
+    "bg_primary":     "#11100B",     # Deep warm black with gold undertone
+    "bg_secondary":   "#1A1610",     # Dark golden-brown
+    "bg_card":        "#231D14",     # Card surfaces — warm golden-brown
+    "bg_card_hover":  "#302618",     # Card hover — lighter gold-brown
+    "bg_input":       "#15120D",     # Input fields
+    "border":         "#3D3222",     # Borders — golden-brown
+    "border_accent":  "#5C4A30",     # Active borders — rich gold
+    "text_primary":   "#F2EADB",     # Warm creamy white
+    "text_secondary": "#B0A080",     # Labels — warm gold-gray
+    "text_muted":     "#7A6B50",     # Dimmed — golden muted
+    "accent_amber":   "#D4A044",     # Primary accent — warm amber
+    "accent_gold":    "#F0C060",     # Secondary accent — bright gold
+    "accent_green":   "#10B981",     # Ready / success
+    "accent_red":     "#EF4444",     # Error
+    "accent_orange":  "#F59E0B",     # Warning / loading
+    "accent_cyan":    "#00D4FF",     # Thinking state (neon)
+    "gauge_track":    "#261E14",     # Gauge background — golden-brown
     "success":        "#10B981",
     "warning":        "#F59E0B",
     "error":          "#EF4444",
+    "gold_glow":      "rgba(240, 192, 96, 50)",  # Subtle gold glow for premium elements
 }
 
 # ── Typography ──────────────────────────────────────────────────
@@ -93,7 +94,7 @@ def get_global_stylesheet() -> str:
     }}
     QPushButton:hover {{
         background-color: {c['bg_card_hover']};
-        border-color: {c['accent_amber']};
+        border: 1px solid {c['accent_gold']};
     }}
     QPushButton:pressed {{
         background-color: {c['accent_amber']};
@@ -114,8 +115,12 @@ def get_global_stylesheet() -> str:
         border: 2px solid {c['border_accent']};
         background: {c['bg_input']};
     }}
+    QCheckBox::indicator:hover {{
+        border-color: {c['accent_gold']};
+    }}
     QCheckBox::indicator:checked {{
-        background: {c['accent_amber']};
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+            stop:0 {c['accent_amber']}, stop:1 {c['accent_gold']});
         border-color: {c['accent_gold']};
     }}
 

@@ -16,7 +16,7 @@ SETTINGS_FILE = SETTINGS_DIR / "settings.json"
 
 DEFAULT_SETTINGS = {
     "start_at_startup": True,
-    "minimize_to_tray": True,
+    "hotkey": "ctrl+caps lock",
 }
 
 

@@ -18,6 +18,8 @@ def _resolve_asset_path(filename):
 class OverlayWidget(QWidget):
     """Floating translucent overlay showing Trixie's live status."""
     
+    logo_clicked = Signal()  # emitted when user clicks the logo/header area"
+    
     def __init__(self, toggle_cb, parent=None):
         super().__init__(parent)
         self.toggle_cb = toggle_cb
@@ -548,10 +550,14 @@ class OverlayWidget(QWidget):
     
     def mouseReleaseEvent(self, event):
         if getattr(event, 'button', lambda: None)() == Qt.MouseButton.LeftButton:
-            if not getattr(self, '_click_handled', True) and self.is_ball_mode:
-                bs = self.ball_size
-                if self.ball_x <= event.pos().x() <= self.ball_x + bs and self.ball_y <= event.pos().y() <= self.ball_y + bs:
-                    self._click_timer.start(250)
+            if not getattr(self, '_click_handled', True):
+                # Check if click is on the logo/header area (expanded mode, y < 40)
+                if not self.is_ball_mode and event.pos().y() < 40:
+                    self.logo_clicked.emit()
+                elif self.is_ball_mode:
+                    bs = self.ball_size
+                    if self.ball_x <= event.pos().x() <= self.ball_x + bs and self.ball_y <= event.pos().y() <= self.ball_y + bs:
+                        self._click_timer.start(250)
             self._drag_pos = None
             
     def mouseDoubleClickEvent(self, event):

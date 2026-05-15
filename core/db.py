@@ -7,7 +7,12 @@ from difflib import SequenceMatcher
 class DBManager:
     def __init__(self, db_path=None):
         if db_path is None:
-            db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs", "history.db")
+            import sys
+            if getattr(sys, "frozen", False):
+                base_dir = os.path.dirname(sys.executable)
+            else:
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            db_path = os.path.join(base_dir, "logs", "history.db")
         self.db_path = db_path
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False)

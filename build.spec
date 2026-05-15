@@ -15,6 +15,10 @@ keyboard_datas, keyboard_binaries, keyboard_hiddenimports = collect_all("keyboar
 sounddevice_datas, sounddevice_binaries, sounddevice_hiddenimports = collect_all("sounddevice")
 # llama_cpp needs its lib/ directory (native GGUF DLLs) bundled
 llama_datas, llama_binaries, llama_hiddenimports = collect_all("llama_cpp")
+# faster_whisper ships silero_vad_v6.onnx in its assets/ — must be bundled
+fw_datas, fw_binaries, fw_hiddenimports = collect_all("faster_whisper")
+# ctranslate2 is the inference backend for faster-whisper (native DLLs)
+ct2_datas, ct2_binaries, ct2_hiddenimports = collect_all("ctranslate2")
 
 # ── Hidden imports for runtime-imported packages ─────────────
 hiddenimports = [
@@ -35,6 +39,8 @@ hiddenimports = [
     *keyboard_hiddenimports,
     *sounddevice_hiddenimports,
     *llama_hiddenimports,
+    *fw_hiddenimports,
+    *ct2_hiddenimports,
 ]
 
 # ── Analysis ─────────────────────────────────────────────────
@@ -45,12 +51,16 @@ a = Analysis(
         *keyboard_binaries,
         *sounddevice_binaries,
         *llama_binaries,
+        *fw_binaries,
+        *ct2_binaries,
     ],
     datas=[
         ("assets", "assets"),
         *keyboard_datas,
         *sounddevice_datas,
         *llama_datas,
+        *fw_datas,
+        *ct2_datas,
     ],
     hiddenimports=hiddenimports,
     hookspath=[],

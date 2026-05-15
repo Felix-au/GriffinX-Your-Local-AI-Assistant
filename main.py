@@ -406,12 +406,6 @@ class TrixieApp:
         """Always minimize to tray on dashboard close."""
         event.ignore()
         self.dashboard.hide()
-        self.ui.tray.showMessage(
-            "Trixie",
-            "Dashboard minimized to tray. Double-click tray icon to reopen.",
-            self.ui.tray.MessageIcon.Information,
-            2000
-        )
 
     def run(self):
         """Start the keyboard listener and UI."""

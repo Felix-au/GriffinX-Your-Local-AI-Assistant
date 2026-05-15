@@ -12,7 +12,12 @@ from core.llm_engine import LLMEngine
 from core.executor import CommandExecutor
 from core.macro_manager import MacroManager
 from core.tts_engine import TTSEngine
+from core.system_monitor import SystemMonitor
+from core.settings import load_settings, update_setting
+from core.startup_manager import enable_startup, disable_startup, is_startup_enabled
+from core.model_manager import ModelDownloadSignals, MODEL_REGISTRY, ensure_model
 from ui.app import UIEngine
+from ui.theme import get_global_stylesheet
 
 # Suppress HF symlink warnings on Windows
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
@@ -44,7 +49,6 @@ class TrixieApp:
         
         logger.info("Initializing TTS, Executor & Macro Managers...")
         # Ensure Piper models
-        from core.model_manager import ensure_model
         ensure_model("tts_config")
         tts_model_path = ensure_model("tts_model")
         
@@ -59,11 +63,15 @@ class TrixieApp:
         self.pending_feedback_intent = None
         self.pending_feedback_target = None
         self.ui = None
+        self.dashboard = None
+        self.system_monitor = None
+        self.settings = load_settings()
 
     def start_listening(self):
         if self.audio.is_recording:
             return
         self.ui.set_status("Listening...")
+        self._log_activity("🎙️ Listening started")
         self.recording_stream = self.audio.record_audio()
         if self.recording_stream is None:
             self.ui.set_status("Idle (Microphone unavailable)")
@@ -79,6 +87,7 @@ class TrixieApp:
         logger.info(f"User said: {text}")
         self.ui.set_transcript(text)
         self.ui.set_status("Thinking...")
+        self._log_activity(f"📝 Transcribed: {text}")
         threading.Thread(target=self.process_command, args=(text,), daemon=True).start()
         
     def _handle_feedback(self, response):
@@ -96,14 +105,14 @@ class TrixieApp:
                 self.pending_feedback_target
             )
             self.ui.set_response("✅ Saved to cache.")
+            self._log_activity(f"✅ Feedback: correct — cached '{self.pending_feedback_text}'")
             logger.info(f"Cached: '{self.pending_feedback_text}' → {self.pending_feedback_intent}:{self.pending_feedback_target}")
         elif response == "no":
             self.db.update_feedback(self.pending_feedback_id, "incorrect")
             self.ui.set_response("❌ Feedback logged.")
+            self._log_activity(f"❌ Feedback: incorrect — '{self.pending_feedback_text}'")
             logger.info(f"Rejected: '{self.pending_feedback_text}'")
             
-        self._clear_feedback()
-        
         self._clear_feedback()
         self.ui.set_status("Idle")
     
@@ -122,12 +131,14 @@ class TrixieApp:
             logger.info(f"Cache HIT ({ratio:.0%}): '{user_text}' ≈ '{matched_text}' → {intent}:{target}")
             self.ui.set_status(f"⚡ Cached: {intent}...")
             self.ui.set_response(f"⚡ Cache match ({ratio:.0%}): {intent} → {target}")
+            self._log_activity(f"⚡ Cache HIT ({ratio:.0%}): {intent}:{target}")
             
             # Execute directly — no LLM inference needed
             intent_data = {"intent": intent, "target": target}
         else:
             # === STEP 2: Full LLM inference ===
             logger.info("Cache MISS — running LLM inference...")
+            self._log_activity("🧠 Cache MISS — LLM inference...")
             sys_prompt = self.context.get_system_prompt()
             memory = self.context.get_short_term_memory()
             intent_data = self.llm.get_intent(sys_prompt, user_text, memory)
@@ -145,6 +156,7 @@ class TrixieApp:
             executed_actions = [{"action": intent, "target": target}]
             status = self.executor.execute(intent, target)
             response_msg = f"{intent}: {target} — {status}"
+            self._log_activity(f"⚡ Executed: {intent}:{target} — {status}")
             
         elif intent == "macro_creation":
             self.ui.set_status("Saving Macro...")
@@ -152,6 +164,7 @@ class TrixieApp:
             success = self.macro_manager.create_macro_from_history(macro_name, user_text, None)
             status = "Created" if success else "Failed to create macro"
             response_msg = f"Macro '{macro_name}': {status}"
+            self._log_activity(f"📦 Macro '{macro_name}': {status}")
             
         elif intent == "macro_execution":
             self.ui.set_status(f"Running Macro: {target}...")
@@ -164,10 +177,12 @@ class TrixieApp:
             else:
                 status = f"Macro '{target}' not found"
             response_msg = f"Macro '{target}': {status}"
+            self._log_activity(f"📦 Macro '{target}': {status}")
             
         elif intent == "general_query":
             response_msg = intent_data.get('message', '...')
             logger.info(f"LLM Response: {response_msg}")
+            self._log_activity(f"💬 Query response sent")
             
         # Show response
         if response_msg:
@@ -203,6 +218,7 @@ class TrixieApp:
         logger.info(f"User typed: {text}")
         self.ui.set_transcript(text)
         self.ui.set_status("Thinking...")
+        self._log_activity(f"⌨️ Typed: {text}")
         threading.Thread(target=self.process_command, args=(text,), daemon=True).start()
 
     def toggle_listening(self):
@@ -213,18 +229,124 @@ class TrixieApp:
 
     def quit(self):
         logger.info("Quitting Trixie...")
+        if self.system_monitor:
+            self.system_monitor.stop()
         keyboard.unhook_all()
+
+    def _log_activity(self, message):
+        """Send activity message to dashboard if available."""
+        if self.dashboard:
+            self.dashboard.add_activity(message)
+
+    def _on_setting_changed(self, key, value):
+        """Handle dashboard setting changes."""
+        update_setting(key, value)
+        if key == "start_at_startup":
+            if value:
+                enable_startup()
+            else:
+                disable_startup()
+
+    def _show_dashboard(self):
+        """Show dashboard window, creating if needed."""
+        if self.dashboard:
+            self.dashboard.show()
+            self.dashboard.raise_()
+            self.dashboard.activateWindow()
+
+    def _handle_dashboard_close(self, event):
+        """Custom close behavior for dashboard — hide to tray if configured."""
+        if self.settings.get("minimize_to_tray", True):
+            event.ignore()
+            self.dashboard.hide()
+            self.ui.tray.showMessage(
+                "Trixie",
+                "Dashboard minimized to tray. Double-click tray icon to reopen.",
+                self.ui.tray.MessageIcon.Information,
+                2000
+            )
+        else:
+            self.quit()
+            self.ui.quit_app()
+
+    def _init_model_status(self):
+        """Check model status and update dashboard cards."""
+        import os
+        # STT
+        stt_path = os.path.join("models", "faster-whisper-medium.en")
+        if os.path.exists(stt_path):
+            self.dashboard.card_stt.set_ready(stt_path)
+        else:
+            self.dashboard.card_stt.set_missing()
+        
+        # LLM
+        llm_path = self.config.get("model_paths", {}).get("llm", "models/Qwen_Qwen3-4B-Q4_K_M.gguf")
+        if os.path.exists(llm_path):
+            self.dashboard.card_llm.set_ready(llm_path)
+        else:
+            self.dashboard.card_llm.set_missing()
+        
+        # TTS
+        tts_path = os.path.join("models", "en_US-lessac-medium.onnx")
+        if os.path.exists(tts_path):
+            self.dashboard.card_tts.set_ready(tts_path)
+        else:
+            self.dashboard.card_tts.set_missing()
 
     def run(self):
         """Start the keyboard listener and UI."""
         logger.info("Trixie is starting...")
         keyboard.hook_key('caps lock', self.trigger_push_to_talk, suppress=True)
+        
         self.ui = UIEngine(
             toggle_listening_callback=self.toggle_listening,
             quit_callback=self.quit,
             feedback_callback=self._handle_feedback,
             text_command_callback=self._handle_text_command
         )
+        
+        # Apply global theme stylesheet
+        self.ui.app.setStyleSheet(get_global_stylesheet())
+        
+        # Set app icon
+        from ui.app import _resolve_asset_path
+        ico_path = _resolve_asset_path("trixie.ico")
+        if os.path.exists(ico_path):
+            from PySide6.QtGui import QIcon
+            self.ui.app.setWindowIcon(QIcon(ico_path))
+        
+        # ── Dashboard ──────────────────────────────────────────
+        from ui.dashboard import DashboardWindow
+        self.dashboard = DashboardWindow(version="1.0.0")
+        
+        # Apply saved settings to dashboard checkboxes
+        self.dashboard.apply_settings(self.settings)
+        
+        # Wire setting changes
+        self.dashboard.setting_changed.connect(self._on_setting_changed)
+        
+        # Apply startup setting on first run
+        if self.settings.get("start_at_startup", True) and not is_startup_enabled():
+            enable_startup()
+        
+        # Custom close behavior
+        self.dashboard.closeEvent = self._handle_dashboard_close
+        
+        # Wire dashboard request from tray
+        self.ui.dashboard_requested.connect(self._show_dashboard)
+        
+        # ── System Monitor ─────────────────────────────────────
+        self.system_monitor = SystemMonitor(interval_ms=1000)
+        self.system_monitor.stats_updated.connect(self.dashboard.update_stats)
+        self.system_monitor.start()
+        
+        # ── Model Status ───────────────────────────────────────
+        self._init_model_status()
+        
+        # ── Show both windows ──────────────────────────────────
+        self.dashboard.show()
+        self._log_activity("🚀 Trixie started")
+        
         self.ui.run()
 
 if __name__ == "__main__":

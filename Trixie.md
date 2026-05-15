@@ -72,7 +72,7 @@ When you launch `main.py` (or `Trixie.exe`), the following happens:
 5. The **TTS engine** initializes — Piper voice model loaded, or TTS disabled if model is missing.
 6. The **Piper models** are ensured — `model_manager.ensure_model()` downloads TTS config and voice model if absent.
 7. The **keyboard hook** registers — `Ctrl + CapsLock` is intercepted globally.
-8. The **PyQt6 UI** starts — floating overlay appears bottom-right, system tray icon appears in the taskbar.
+8. The **PySide6 UI** starts — floating overlay appears bottom-right, dashboard window opens, system tray icon appears in the taskbar.
 
 ### Closing / Minimizing
 
@@ -346,7 +346,7 @@ The expanded overlay is the default view when Trixie launches. It shows:
 
 | Section | What You See |
 |---|---|
-| **Header Bar** | Purple-blue gradient with "◉ Trixie" title and minimize button |
+| **Header Bar** | Warm brownish gradient with Trixie logo, title, and minimize button |
 | **Status Dot** | 🟢 Green pulse = Listening · 🟡 Orange = Thinking/Executing · 🔴 Red = Error · ⚪ Gray = Idle |
 | **Status Text** | Current state: "Idle", "Listening...", "Transcribing...", "Thinking...", "Executing: open_app..." |
 | **Transcript** | "YOU:" label with your transcribed/typed command |
@@ -538,13 +538,13 @@ Build a standalone executable:
 
 ```powershell
 uv sync --extra build
-uv run python package.py
+uv run python build.py
 ```
 
 This produces `dist/Trixie.exe` — a single-file PyInstaller executable with:
 - Python runtime + all dependencies
 - All `core/` and `ui/` modules
-- Hidden imports for keyboard, sounddevice, llama_cpp, faster_whisper
+- Hidden imports for keyboard, sounddevice, llama_cpp, faster_whisper, PySide6
 
 **Not bundled:** The ~4 GB of model files. On first run, they download into `models/` next to the executable. For offline distribution, ship the populated `models/` folder alongside the EXE.
 
@@ -567,12 +567,18 @@ Trixie is a local-first, voice-controlled Windows desktop assistant. It uses thr
 | **TTS Engine** | `core/tts_engine.py` | Piper neural TTS. WAV synthesis → PCM16 → float32 → sounddevice playback. Async thread. |
 | **Model Manager** | `core/model_manager.py` | Downloads models from HuggingFace (snapshots and direct URLs). Progress bars. Atomic writes. |
 | **DB Manager** | `core/db.py` | SQLite with 3 tables: history (interactions + feedback), intent_cache (verified mappings), macros. |
-| **UI Engine** | `ui/app.py` | PyQt6 floating overlay (expanded + ball mode), system tray icon, text input, feedback buttons. |
+| **UI Engine** | `ui/app.py` | PySide6 floating overlay (expanded + ball mode), system tray icon, text input, feedback buttons. |
+| **Dashboard** | `ui/dashboard.py` | PySide6 main window with system gauges, model cards, activity log, and settings. |
+| **Theme** | `ui/theme.py` | Design system — colors, fonts, dimensions, global QSS stylesheet. |
+| **Widgets** | `ui/widgets/` | Reusable gauge, stat card, and model card widgets. |
+| **System Monitor** | `core/system_monitor.py` | CPU/RAM/GPU stats collector via psutil and optional pynvml. |
+| **Settings** | `core/settings.py` | JSON settings persistence at %LOCALAPPDATA%/Trixie/. |
+| **Startup Manager** | `core/startup_manager.py` | Windows Registry startup management. |
 
 ### Technology Stack
 
 - **Language**: Python 3.10+
-- **UI Framework**: PyQt6
+- **UI Framework**: PySide6
 - **STT**: Faster-Whisper (CTranslate2)
 - **LLM**: Qwen 3 4B GGUF via llama-cpp-python
 - **TTS**: Piper (ONNX Runtime)

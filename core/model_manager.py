@@ -6,6 +6,31 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
+class ModelDownloadSignals:
+    """Optional Qt signal emitter for download progress.
+    Avoids hard PySide6 dependency at module level — instantiate only when Qt is running.
+    """
+    def __init__(self):
+        try:
+            from PySide6.QtCore import QObject, Signal
+
+            class _Emitter(QObject):
+                download_started = Signal(str, str)    # (model_key, description)
+                download_progress = Signal(str, int, int)  # (model_key, downloaded, total)
+                download_finished = Signal(str, str)   # (model_key, path)
+                download_failed = Signal(str, str)     # (model_key, error)
+                model_already_present = Signal(str, str)  # (model_key, path)
+
+            self._emitter = _Emitter()
+            self.download_started = self._emitter.download_started
+            self.download_progress = self._emitter.download_progress
+            self.download_finished = self._emitter.download_finished
+            self.download_failed = self._emitter.download_failed
+            self.model_already_present = self._emitter.model_already_present
+        except ImportError:
+            self._emitter = None
+
 # Only the LLM model — vision removed
 MODEL_REGISTRY = {
     "stt": {
@@ -43,22 +68,26 @@ def _progress_hook(downloaded, total_size):
         sys.stdout.write(f"\r  [{bar}] {pct:.1f}% - {downloaded / (1024**3):.2f} / {total_size / (1024**3):.2f} GB")
         sys.stdout.flush()
 
-def download_model(model_key, models_dir="models"):
+def download_model(model_key, models_dir="models", signals=None):
     if model_key not in MODEL_REGISTRY:
         logger.error(f"Unknown model key: {model_key}")
         return None
     info = MODEL_REGISTRY[model_key]
     if "repo_id" in info:
-        return download_huggingface_snapshot(model_key, models_dir)
+        return download_huggingface_snapshot(model_key, models_dir, signals)
 
     dest = os.path.join(models_dir, info["filename"])
     if os.path.exists(dest):
+        if signals and hasattr(signals, 'model_already_present'):
+            signals.model_already_present.emit(model_key, dest)
         return dest
     os.makedirs(models_dir, exist_ok=True)
     print(f"\n{'='*60}")
     print(f"  Downloading: {info['description']}")
     print(f"  Size: {info['size_label']}")
     print(f"{'='*60}")
+    if signals and hasattr(signals, 'download_started'):
+        signals.download_started.emit(model_key, info['description'])
     req = urllib.request.Request(info["url"], headers={"User-Agent": "Mozilla/5.0"})
     try:
         with urllib.request.urlopen(req) as resp, open(dest + ".tmp", "wb") as f:
@@ -71,8 +100,12 @@ def download_model(model_key, models_dir="models"):
                 f.write(data)
                 downloaded += len(data)
                 _progress_hook(downloaded, total)
+                if signals and hasattr(signals, 'download_progress'):
+                    signals.download_progress.emit(model_key, downloaded, total)
         os.rename(dest + ".tmp", dest)
         print(f"\n  [OK] Downloaded: {dest}\n")
+        if signals and hasattr(signals, 'download_finished'):
+            signals.download_finished.emit(model_key, dest)
         return dest
     except Exception as e:
         logger.error(f"Download failed: {e}")
@@ -80,14 +113,18 @@ def download_model(model_key, models_dir="models"):
         if os.path.exists(tmp):
             os.remove(tmp)
         print(f"\n  [FAILED] Failed: {e}\n")
+        if signals and hasattr(signals, 'download_failed'):
+            signals.download_failed.emit(model_key, str(e))
         return None
 
-def download_huggingface_snapshot(model_key, models_dir="models"):
+def download_huggingface_snapshot(model_key, models_dir="models", signals=None):
     info = MODEL_REGISTRY[model_key]
     dest = Path(models_dir) / info["dirname"]
     required_files = ["config.json", "model.bin", "tokenizer.json"]
 
     if dest.exists() and all((dest / filename).exists() for filename in required_files):
+        if signals and hasattr(signals, 'model_already_present'):
+            signals.model_already_present.emit(model_key, str(dest))
         return str(dest)
 
     print(f"\n{'='*60}")
@@ -95,6 +132,8 @@ def download_huggingface_snapshot(model_key, models_dir="models"):
     print(f"  Size: {info['size_label']}")
     print(f"  Destination: {dest}")
     print(f"{'='*60}")
+    if signals and hasattr(signals, 'download_started'):
+        signals.download_started.emit(model_key, info['description'])
 
     try:
         from huggingface_hub import snapshot_download
@@ -107,20 +146,26 @@ def download_huggingface_snapshot(model_key, models_dir="models"):
             max_workers=4,
         )
         print(f"\n  [OK] Downloaded: {path}\n")
+        if signals and hasattr(signals, 'download_finished'):
+            signals.download_finished.emit(model_key, str(path))
         return str(path)
     except Exception as e:
         logger.error(f"Hugging Face snapshot download failed: {e}")
         print(f"\n  [FAILED] Failed: {e}\n")
+        if signals and hasattr(signals, 'download_failed'):
+            signals.download_failed.emit(model_key, str(e))
         return None
 
-def ensure_model(model_key, models_dir="models"):
+def ensure_model(model_key, models_dir="models", signals=None):
     info = MODEL_REGISTRY.get(model_key)
     if not info:
         return None
     if "repo_id" in info:
-        return download_huggingface_snapshot(model_key, models_dir)
+        return download_huggingface_snapshot(model_key, models_dir, signals)
 
     dest = os.path.join(models_dir, info["filename"])
     if os.path.exists(dest):
+        if signals and hasattr(signals, 'model_already_present'):
+            signals.model_already_present.emit(model_key, dest)
         return dest
-    return download_model(model_key, models_dir)
+    return download_model(model_key, models_dir, signals)

@@ -7,7 +7,7 @@ dependencies = [
     "faster-whisper",
     "huggingface-hub",
     "llama-cpp-python",
-    "PyQt6",
+    "PySide6>=6.6",
     "mss",
     "Pillow",
     "pyautogui",
@@ -17,6 +17,8 @@ dependencies = [
     "scipy",
     "piper-tts",
     "onnxruntime",
+    "psutil",
+    "platformdirs",
 ]
 
 [project.optional-dependencies]

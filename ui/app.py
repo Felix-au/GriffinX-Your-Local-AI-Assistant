@@ -1,10 +1,10 @@
 import sys
 import os
 os.environ["QT_LOGGING_RULES"] = "qt.qpa.window=false"
-from PyQt6.QtWidgets import (QApplication, QSystemTrayIcon, QMenu, QWidget,
+from PySide6.QtWidgets import (QApplication, QSystemTrayIcon, QMenu, QWidget,
                               QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit)
-from PyQt6.QtGui import QIcon, QPixmap, QFont, QPainter, QColor, QLinearGradient, QPen, QImage
-from PyQt6.QtCore import Qt, pyqtSignal, QObject, QTimer, QPropertyAnimation, QEasingCurve, QRect
+from PySide6.QtGui import QIcon, QPixmap, QFont, QPainter, QColor, QLinearGradient, QPen, QImage
+from PySide6.QtCore import Qt, Signal, QObject, QTimer, QPropertyAnimation, QEasingCurve, QRect
 import logging
 
 def _resolve_asset_path(filename):
@@ -129,7 +129,7 @@ class OverlayWidget(QWidget):
         
         self.bubble_h = 0
         if show_bubble:
-            from PyQt6.QtGui import QFontMetrics
+            from PySide6.QtGui import QFontMetrics
             font = QFont("Segoe UI", 10)
             metrics = QFontMetrics(font)
             rect = metrics.boundingRect(0, 0, new_w - 40, 1000, 
@@ -246,7 +246,7 @@ class OverlayWidget(QWidget):
 
     def _update_expanded_layout(self):
         """Dynamically resize the expanded window upwards based on content."""
-        from PyQt6.QtGui import QFontMetrics
+        from PySide6.QtGui import QFontMetrics
         y = 95 # Start of chat area
         
         # Measure Transcript
@@ -295,41 +295,101 @@ class OverlayWidget(QWidget):
             cx = bx - 7
             cy = by - 7
             
-            # Pulse if listening
+            # Pulse if listening — orbiting particle ring
             if self.status_text == "Listening...":
-                alpha = int(128 + 127 * math.sin(math.radians(self.pulse_phase)))
                 p.setBrush(Qt.BrushStyle.NoBrush)
-                # Outer soft neon glow
-                p.setPen(QPen(QColor(50, 255, 100, alpha // 3), 8))
-                p.drawEllipse(cx, cy, glow_size, glow_size)
-                # Inner sharp neon ring
-                p.setPen(QPen(QColor(50, 255, 100, alpha), 2))
+                # Subtle breathing ring
+                breath = int(80 + 60 * math.sin(math.radians(self.pulse_phase * 0.7)))
+                p.setPen(QPen(QColor(50, 255, 100, breath), 2))
                 p.drawEllipse(cx, cy, glow_size, glow_size)
                 
-            # Neon arc spinner if thinking/executing/transcribing
-            elif any(s in self.status_text for s in ["Thinking", "Executing", "Transcribing"]):
-                p.setBrush(Qt.BrushStyle.NoBrush)
-                # Green for transcribing, Cyan for thinking/executing
-                color = QColor(50, 255, 100) if "Transcribing" in self.status_text else QColor(0, 255, 255)
+                # 6 orbiting particles with trails
+                center_x = bx + bs / 2
+                center_y = by + bs / 2
+                orbit_r = (glow_size) / 2 + 2
+                num_particles = 6
+                for i in range(num_particles):
+                    angle = math.radians(self.pulse_phase * 2 + i * (360 / num_particles))
+                    # Lead particle
+                    px = center_x + orbit_r * math.cos(angle)
+                    py = center_y + orbit_r * math.sin(angle)
+                    # Glow
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.setBrush(QColor(50, 255, 100, 40))
+                    p.drawEllipse(int(px) - 6, int(py) - 6, 12, 12)
+                    # Core dot
+                    p.setBrush(QColor(50, 255, 100, 220))
+                    p.drawEllipse(int(px) - 3, int(py) - 3, 6, 6)
+                    # 4 trailing dots
+                    for t in range(1, 5):
+                        trail_angle = angle - math.radians(t * 8)
+                        tx = center_x + orbit_r * math.cos(trail_angle)
+                        ty = center_y + orbit_r * math.sin(trail_angle)
+                        trail_alpha = max(20, 180 - t * 40)
+                        trail_size = max(2, 5 - t)
+                        p.setBrush(QColor(50, 255, 100, trail_alpha))
+                        p.drawEllipse(int(tx) - trail_size // 2, int(ty) - trail_size // 2, trail_size, trail_size)
                 
-                # Outer soft neon glow arc
-                p.setPen(QPen(QColor(color.red(), color.green(), color.blue(), 60), 8))
-                p.drawArc(cx, cy, glow_size, glow_size, self.pulse_phase * 16, 140 * 16)
-                # Inner sharp neon arc
-                p.setPen(QPen(color, 3))
-                p.drawArc(cx, cy, glow_size, glow_size, self.pulse_phase * 16, 140 * 16)
+            # Spinning conical sweep if thinking/executing
+            elif any(s in self.status_text for s in ["Thinking", "Executing"]):
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                # Dim track ring
+                p.setPen(QPen(QColor(0, 212, 255, 30), 3))
+                p.drawEllipse(cx, cy, glow_size, glow_size)
+                
+                # Spinning 120° arc with cyan→gold gradient
+                arc_angle = self.pulse_phase
+                # Outer glow arc
+                p.setPen(QPen(QColor(0, 212, 255, 50), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                p.drawArc(cx, cy, glow_size, glow_size, int(arc_angle * 16), 120 * 16)
+                # Inner sharp arc
+                p.setPen(QPen(QColor(0, 212, 255, 200), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                p.drawArc(cx, cy, glow_size, glow_size, int(arc_angle * 16), 120 * 16)
+                
+                # Leading head dot with glow
+                center_x = bx + bs / 2
+                center_y = by + bs / 2
+                head_r = (glow_size) / 2 + 1
+                head_angle = math.radians(arc_angle + 120)
+                hx = center_x + head_r * math.cos(head_angle)
+                hy = center_y - head_r * math.sin(head_angle)
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(QColor(240, 192, 96, 60))
+                p.drawEllipse(int(hx) - 8, int(hy) - 8, 16, 16)
+                p.setBrush(QColor(240, 192, 96, 255))
+                p.drawEllipse(int(hx) - 3, int(hy) - 3, 6, 6)
+                
+            # Green spinner for transcribing
+            elif "Transcribing" in self.status_text:
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.setPen(QPen(QColor(50, 255, 100, 30), 3))
+                p.drawEllipse(cx, cy, glow_size, glow_size)
+                # Spinning green arc
+                p.setPen(QPen(QColor(50, 255, 100, 50), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                p.drawArc(cx, cy, glow_size, glow_size, int(self.pulse_phase * 16), 120 * 16)
+                p.setPen(QPen(QColor(50, 255, 100, 200), 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                p.drawArc(cx, cy, glow_size, glow_size, int(self.pulse_phase * 16), 120 * 16)
             
             else:
-                # Idle state: subtle breathing glow — bluish neon
-                breath_alpha = int(100 + 120 * math.sin(math.radians(self.pulse_phase)))
+                # Idle state: multi-ring warm amber breathing glow
+                center_x = bx + bs / 2
+                center_y = by + bs / 2
                 p.setBrush(Qt.BrushStyle.NoBrush)
-                p.setPen(QPen(QColor(60, 140, 255, breath_alpha), 6))
-                p.drawEllipse(cx, cy, glow_size, glow_size)
+                
+                # Inner ring — slow breathe
+                inner_alpha = int(80 + 100 * math.sin(math.radians(self.pulse_phase)))
+                p.setPen(QPen(QColor(212, 160, 68, inner_alpha), 3))
+                p.drawEllipse(cx + 2, cy + 2, glow_size - 4, glow_size - 4)
+                
+                # Outer ring — faster breathe, lower opacity
+                outer_alpha = int(40 + 60 * math.sin(math.radians(self.pulse_phase * 2)))
+                p.setPen(QPen(QColor(240, 192, 96, outer_alpha), 2))
+                p.drawEllipse(cx - 3, cy - 3, glow_size + 6, glow_size + 6)
             
             # Draw the ball — branded circular image or fallback gradient
             if self.ball_pixmap and not self.ball_pixmap.isNull():
                 # Clip to circle for clean edges
-                from PyQt6.QtGui import QPainterPath
+                from PySide6.QtGui import QPainterPath
                 clip_path = QPainterPath()
                 clip_path.addEllipse(float(bx), float(by), float(bs), float(bs))
                 p.setClipPath(clip_path)
@@ -370,8 +430,8 @@ class OverlayWidget(QWidget):
                 ]
                 p.setBrush(QColor(15, 15, 25, 160))
                 p.setPen(Qt.PenStyle.NoPen)
-                from PyQt6.QtGui import QPolygonF
-                from PyQt6.QtCore import QPointF
+                from PySide6.QtGui import QPolygonF
+                from PySide6.QtCore import QPointF
                 poly = QPolygonF([QPointF(x, y) for x, y in tail])
                 p.drawPolygon(poly)
                 
@@ -503,12 +563,12 @@ class OverlayWidget(QWidget):
 
 
 class UIEngine(QObject):
-    # Signals for cross-thread communication
-    status_update = pyqtSignal(str)
-    transcript_update = pyqtSignal(str)
-    response_update = pyqtSignal(str)
-    feedback_signal = pyqtSignal(str)
-    text_command_signal = pyqtSignal(str)
+    status_update = Signal(str)
+    transcript_update = Signal(str)
+    response_update = Signal(str)
+    feedback_signal = Signal(str)
+    text_command_signal = Signal(str)
+    dashboard_requested = Signal()  # emitted when user wants to see dashboard
     
     def __init__(self, toggle_listening_callback, quit_callback, feedback_callback, text_command_callback):
         super().__init__()
@@ -563,6 +623,9 @@ class UIEngine(QObject):
         self.show_overlay_action = self.menu.addAction("Show/Hide Overlay")
         self.show_overlay_action.triggered.connect(self._toggle_overlay)
         
+        self.show_dashboard_action = self.menu.addAction("Open Dashboard")
+        self.show_dashboard_action.triggered.connect(lambda: self.dashboard_requested.emit())
+        
         self.record_action = self.menu.addAction("Push to Talk (Ctrl + CapsLock)")
         self.record_action.triggered.connect(self.toggle_listening_cb)
         self.menu.addSeparator()
@@ -570,6 +633,9 @@ class UIEngine(QObject):
         self.quit_action = self.menu.addAction("Quit")
         self.quit_action.triggered.connect(self.quit_app)
         self.tray.setContextMenu(self.menu)
+        
+        # Double-click tray icon → show dashboard
+        self.tray.activated.connect(self._tray_activated)
         
         # Floating overlay widget
         self.overlay = OverlayWidget(toggle_cb=self.toggle_listening_cb)
@@ -602,6 +668,10 @@ class UIEngine(QObject):
             self.overlay.hide()
         else:
             self.overlay.show()
+    
+    def _tray_activated(self, reason):
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            self.dashboard_requested.emit()
         
     def _update_status_ui(self, msg):
         self.status_action.setText(f"Status: {msg}")

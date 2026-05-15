@@ -659,6 +659,8 @@ class UIEngine(QObject):
     feedback_signal = Signal(str)
     text_command_signal = Signal(str)
     dashboard_requested = Signal()  # emitted when user wants to see dashboard
+    show_feedback_signal = Signal()
+    hide_feedback_signal = Signal()
     
     def __init__(self, toggle_listening_callback, quit_callback, feedback_callback, text_command_callback):
         super().__init__()
@@ -737,6 +739,8 @@ class UIEngine(QObject):
         self.response_update.connect(self.overlay.set_response)
         self.feedback_signal.connect(self.feedback_cb)
         self.text_command_signal.connect(self.text_cmd_cb)
+        self.show_feedback_signal.connect(self.overlay.show_feedback_buttons)
+        self.hide_feedback_signal.connect(self.overlay.hide_feedback_buttons)
         
         # Connect buttons
         self.overlay.btn_up.clicked.connect(lambda: self.feedback_signal.emit("yes"))
@@ -779,10 +783,10 @@ class UIEngine(QObject):
 
 
     def show_feedback_buttons(self):
-        self.overlay.show_feedback_buttons()
+        self.show_feedback_signal.emit()
         
     def hide_feedback_buttons(self):
-        self.overlay.hide_feedback_buttons()
+        self.hide_feedback_signal.emit()
 
     def quit_app(self):
         self.overlay.close()

@@ -230,16 +230,24 @@ class TrixieApp:
                 self.llm = LLMEngine(
                     model_path=self.config.get("model_paths", {}).get("llm", "models/Qwen_Qwen3-4B-Q4_K_M.gguf")
                 )
+                if self.dashboard:
+                    self.dashboard.card_llm.set_ready(llm_path)
                 self._log_activity("✅ LLM engine ready")
             except Exception as e:
                 logger.error(f"LLM init failed: {e}")
+                if self.dashboard:
+                    self.dashboard.card_llm.set_failed(str(e))
                 self._log_activity(f"❌ LLM init failed: {e}")
 
             try:
                 self.tts = TTSEngine(model_path=tts_model_path) if tts_model_path else TTSEngine()
+                if self.dashboard:
+                    self.dashboard.card_tts.set_ready("Piper loaded")
                 self._log_activity("✅ TTS engine ready")
             except Exception as e:
                 logger.error(f"TTS init failed: {e}")
+                if self.dashboard:
+                    self.dashboard.card_tts.set_failed(str(e))
                 self._log_activity(f"❌ TTS init failed: {e}")
 
             self._log_activity("🚀 All engines initialized")

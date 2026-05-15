@@ -12,7 +12,7 @@ import shutil
 def _banner():
     print()
     print("╔══════════════════════════════════════════════════╗")
-    print("║         Trixie — Build Pipeline  v1.0           ║")
+    print("║         Trixie — Build Pipeline  v1.0            ║")
     print("╚══════════════════════════════════════════════════╝")
     print()
 

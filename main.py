@@ -2,15 +2,90 @@ import logging
 import time
 import json
 import threading
-import keyboard
+import sys
 import os
 import ctypes
+
+# ── Log file setup (must happen before any other imports that log) ────────────
+def _setup_logging():
+    """
+    In frozen EXE (console=False), stdout/stderr are None.
+    Redirect all output to trixie.log next to the EXE so you get the full
+    terminal equivalent while debugging a packaged build.
+    In dev mode (uv run python main.py), normal terminal output is preserved.
+    """
+    import logging.handlers
+
+    # Determine log directory: next to EXE when frozen, cwd when from source
+    if getattr(sys, "frozen", False):
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    log_path = os.path.join(base_dir, "trixie.log")
+
+    # Rotating file handler — max 5 MB, keep 3 backups
+    file_handler = logging.handlers.RotatingFileHandler(
+        log_path, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
+    )
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s [%(levelname)s] %(name)s - %(message)s")
+    )
+
+    handlers = [file_handler]
+
+    # In frozen EXE, stdout/stderr are None — redirect them to the log file too
+    if getattr(sys, "frozen", False):
+        import io
+
+        class _StreamToLog(io.TextIOBase):
+            """Forwards write() calls to the Python logging system."""
+            def __init__(self, level=logging.INFO):
+                self._logger = logging.getLogger("stdout" if level == logging.INFO else "stderr")
+                self._level = level
+                self._buf = ""
+
+            def write(self, msg):
+                self._buf += msg
+                while "\n" in self._buf:
+                    line, self._buf = self._buf.split("\n", 1)
+                    if line.strip():
+                        self._logger.log(self._level, line)
+                return len(msg)
+
+            def flush(self):
+                if self._buf.strip():
+                    self._logger.log(self._level, self._buf)
+                    self._buf = ""
+
+        sys.stdout = _StreamToLog(logging.INFO)
+        sys.stderr = _StreamToLog(logging.WARNING)
+    else:
+        # Dev mode: also log to console
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(
+            logging.Formatter("%(asctime)s [%(levelname)s] %(name)s - %(message)s")
+        )
+        handlers.append(console_handler)
+
+    logging.basicConfig(level=logging.DEBUG, handlers=handlers, force=True)
+    return log_path
+
+
+_log_path = _setup_logging()
+# ─────────────────────────────────────────────────────────────────────────────
+
+import keyboard
 
 # Tell Windows taskbar to use Trixie's icon instead of Python's
 try:
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Trixie.LocalAI.1.0")
 except Exception:
     pass
+
+# Suppress HF symlink warnings on Windows
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
 from core.db import DBManager
 from core.context import ContextManager
@@ -26,17 +101,9 @@ from core.model_manager import ModelDownloadSignals, MODEL_REGISTRY, ensure_mode
 from ui.app import UIEngine
 from ui.theme import get_global_stylesheet
 
-# Suppress HF symlink warnings on Windows
-os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
-
-# In windowed EXE (console=False), sys.stderr is None — guard logging before basicConfig crashes
-import sys as _sys
-if _sys.stderr is None:
-    import logging as _logging
-    _logging.basicConfig(handlers=[_logging.NullHandler()], level=_logging.INFO)
-else:
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(name)s - %(message)s')
 logger = logging.getLogger("main")
+logger.info(f"Trixie starting — log file: {_log_path}")
+
 
 class TrixieApp:
     def __init__(self):

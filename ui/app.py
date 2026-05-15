@@ -145,37 +145,49 @@ class OverlayWidget(QWidget):
         show_input = self.text_input.isVisible()
         bs = self.ball_size
         
-        # Wider bubble for better readability
-        new_w = 300 if show_bubble else (bs + 80)
+        # Window wide enough for ball + feedback row below
+        show_feedback = self.btn_up.isVisible()
+        BTN_W = 44  # big enough for emoji to render cleanly
+        BTN_GAP = 12
+
+        new_w = 300 if show_bubble else max(bs + 80, 200)
         new_h = bs + 20
         self.ball_x = (new_w - bs) // 2
         self.ball_y = 10
-        
+
         self.bubble_h = 0
         if show_bubble:
             from PySide6.QtGui import QFontMetrics
             font = QFont("Segoe UI", 10)
             metrics = QFontMetrics(font)
-            rect = metrics.boundingRect(0, 0, new_w - 40, 1000, 
-                                       Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, 
+            rect = metrics.boundingRect(0, 0, new_w - 40, 1000,
+                                       Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap,
                                        self.response_text)
             self.bubble_h = max(40, rect.height() + 25)
             new_h += self.bubble_h + 20
             self.ball_y = self.bubble_h + 30
-            
+
+        # Feedback row sits BELOW the ball
+        if show_feedback:
+            new_h += BTN_W + 8  # add row height below the ball
+
         if show_input:
             new_h += 45
-        
-        # Atomic geometry change — set size + position in one call to prevent jump
+
+        # Atomic geometry change
         self.setMinimumSize(new_w, new_h)
         self.setMaximumSize(new_w, new_h)
         self.setGeometry(old_pos.x(), old_pos.y(), new_w, new_h)
-        
-        self.btn_up.setGeometry(self.ball_x - 35, self.ball_y + 15, 30, 30)
-        self.btn_down.setGeometry(self.ball_x + bs + 5, self.ball_y + 15, 30, 30)
-        
+
+        # Place feedback buttons centred below the ball
+        btn_row_y = self.ball_y + bs + 8
+        btn_total_w = BTN_W * 2 + BTN_GAP
+        btn_left_x = (new_w - btn_total_w) // 2
+        self.btn_up.setGeometry(btn_left_x, btn_row_y, BTN_W, BTN_W)
+        self.btn_down.setGeometry(btn_left_x + BTN_W + BTN_GAP, btn_row_y, BTN_W, BTN_W)
+
         if show_input:
-            self.text_input.setGeometry(15, self.ball_y + bs + 15, new_w - 30, 28)
+            self.text_input.setGeometry(15, self.ball_y + bs + (BTN_W + 16 if show_feedback else 15), new_w - 30, 28)
         
         self.setUpdatesEnabled(True)
 
@@ -193,8 +205,14 @@ class OverlayWidget(QWidget):
             self.setGeometry(old_pos.x(), old_pos.y(), 340, 260)
             self.text_input.show()
             self.btn_minimize.show()
-            self.btn_up.setGeometry(self.width() - 80, 8, 30, 24)
-            self.btn_down.setGeometry(self.width() - 40, 8, 30, 24)
+            # Buttons go at the bottom of the window, centred, not in header
+            btn_w, btn_h = 44, 44
+            gap = 12
+            total = btn_w * 2 + gap
+            bx = (340 - total) // 2
+            by = 260 - btn_h - 36 - 8  # above text input
+            self.btn_up.setGeometry(bx, by, btn_w, btn_h)
+            self.btn_down.setGeometry(bx + btn_w + gap, by, btn_w, btn_h)
         self.setUpdatesEnabled(True)
         self.update()
         
@@ -210,12 +228,26 @@ class OverlayWidget(QWidget):
         self.update()
         
     def show_feedback_buttons(self):
-        self.btn_up.show()
-        self.btn_down.show()
-        
+        if self.is_ball_mode:
+            self.btn_up.show()
+            self.btn_down.show()
+            self._update_ball_layout()
+        else:
+            btn_w, btn_h = 44, 44
+            gap = 12
+            total = btn_w * 2 + gap
+            bx = (self.width() - total) // 2
+            by = self.height() - btn_h - 36 - 8
+            self.btn_up.setGeometry(bx, by, btn_w, btn_h)
+            self.btn_down.setGeometry(bx + btn_w + gap, by, btn_w, btn_h)
+            self.btn_up.show()
+            self.btn_down.show()
+
     def hide_feedback_buttons(self):
         self.btn_up.hide()
         self.btn_down.hide()
+        if self.is_ball_mode:
+            self._update_ball_layout()
         
     def _pulse_tick(self):
         if self.status_text == "Listening...":

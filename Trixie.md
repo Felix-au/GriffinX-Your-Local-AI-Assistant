@@ -18,15 +18,17 @@
 10. [Example 5 — General Knowledge Question](#example-5--general-knowledge-question)
 11. [Example 6 — Closing an Application](#example-6--closing-an-application)
 12. [The Intent Cache — How Trixie Learns](#the-intent-cache--how-trixie-learns)
-13. [UI Guide — Expanded Overlay](#ui-guide--expanded-overlay)
-14. [UI Guide — Minimal Ball Mode](#ui-guide--minimal-ball-mode)
-15. [System Tray](#system-tray)
-16. [Command Executor — App Resolution](#command-executor--app-resolution)
-17. [Model Management](#model-management)
-18. [Hardware Expectations](#hardware-expectations)
-19. [Troubleshooting](#troubleshooting)
-20. [Packaging Notes](#packaging-notes)
-21. [Project Summary](#project-summary)
+13. [UI Guide — Dashboard](#ui-guide--dashboard)
+14. [UI Guide — Ball Mode (Default)](#ui-guide--ball-mode-default)
+15. [UI Guide — Expanded Overlay](#ui-guide--expanded-overlay)
+16. [System Tray](#system-tray)
+17. [Command Executor — App Resolution](#command-executor--app-resolution)
+18. [Model Management](#model-management)
+19. [Hardware Expectations](#hardware-expectations)
+20. [Troubleshooting](#troubleshooting)
+21. [Packaging Notes](#packaging-notes)
+22. [Roadmap](#roadmap)
+23. [Project Summary](#project-summary)
 
 ---
 
@@ -67,18 +69,22 @@ When you launch `main.py` (or `Trixie.exe`), the following happens:
 
 1. `config.json` is loaded — model paths, device settings, cache threshold.
 2. The **SQLite database** opens at `logs/history.db` — stores interaction history, intent cache, and macros.
-3. The **audio engine** prepares — microphone access, Whisper model path set (loaded lazily on first voice command).
-4. The **LLM engine** prepares — Qwen GGUF model path set (loaded lazily on first intent classification).
-5. The **TTS engine** initializes — Piper voice model loaded, or TTS disabled if model is missing.
-6. The **Piper models** are ensured — `model_manager.ensure_model()` downloads TTS config and voice model if absent.
-7. The **keyboard hook** registers — `Ctrl + CapsLock` is intercepted globally.
-8. The **PySide6 UI** starts — floating overlay appears bottom-right, dashboard window opens, system tray icon appears in the taskbar.
+3. The **Dashboard** opens immediately (80% of screen width/height, centred) — showing system gauges and model status cards.
+4. The **floating ball** appears bottom-right — the default compact mode.
+5. The **system tray icon** appears in the taskbar with a branded `trixie.ico`.
+6. **Background model downloads** begin — Whisper, Qwen 3 4B, and Piper TTS download in parallel with live progress bars in the Dashboard.
+7. The **audio engine** prepares — microphone access, Whisper model path set (loaded lazily on first voice command).
+8. The **LLM engine** prepares — Qwen GGUF model path set (loaded lazily on first intent classification).
+9. The **TTS engine** initializes once downloaded — Piper voice model loaded, or TTS disabled if model is missing.
+10. The **keyboard hook** registers — configurable hotkey (default: `Ctrl + CapsLock`) without key suppression.
 
 ### Closing / Minimizing
 
-- Click **X** on the overlay → closes the overlay but Trixie keeps running in the system tray.
-- Right-click the **tray icon → Quit** → fully exits Trixie and unhooks all keyboard listeners.
-- Click **-** on the overlay → switches to minimal ball mode (still active).
+- **Close the Dashboard** → silently minimises to system tray (no notification).
+- **Right-click the ball → Quit** → fully exits Trixie and unhooks all keyboard listeners.
+- **Right-click tray icon → Quit** → same as above.
+- **Click × on the expanded overlay** → collapses back to Ball Mode.
+- **Double-click tray icon** → opens the Dashboard.
 
 ---
 
@@ -340,49 +346,72 @@ The intent cache is the heart of Trixie's learning system. It makes repeated com
 
 ---
 
-## UI Guide — Expanded Overlay
+## UI Guide — Dashboard
 
-The expanded overlay is the default view when Trixie launches. It shows:
+The Dashboard is Trixie's command centre. It opens automatically at launch, sized to 80% of your screen and centred.
 
-| Section | What You See |
+### Layout (5:2 column ratio)
+
+| Left Column (Primary) | Right Column (Side) |
 |---|---|
-| **Header Bar** | Warm brownish gradient with Trixie logo, title, and minimize button |
-| **Status Dot** | 🟢 Green pulse = Listening · 🟡 Orange = Thinking/Executing · 🔴 Red = Error · ⚪ Gray = Idle |
-| **Status Text** | Current state: "Idle", "Listening...", "Transcribing...", "Thinking...", "Executing: open_app..." |
-| **Transcript** | "YOU:" label with your transcribed/typed command |
-| **Response** | "TRIXIE:" label with the action result or conversational answer |
-| **Feedback** | 👍/👎 buttons when awaiting confirmation |
-| **Text Input** | Bottom text box — type commands and press Enter |
+| **System Resources** — 4 circular gauges (CPU, RAM, GPU, VRAM) | **Recent Activity** — timestamped log of downloads, engine init, commands, errors |
+| **AI Models** — status cards for STT, LLM, and TTS with progress bars | **Settings** — start-at-startup toggle, push-to-talk hotkey editor |
 
-The overlay is:
-- **Draggable** — click and drag anywhere to reposition
-- **Always-on-top** — stays above all other windows
-- **Translucent** — dark glassmorphic background with rounded corners
-- **Auto-resizing** — grows upward to fit long transcripts and responses
+### AI Model Cards
+
+Each model card shows:
+- **Title** — e.g., "Faster-Whisper Medium English"
+- **Status icon** — ✅ ready, ⏳ downloading (with %), ❌ missing/failed
+- **Progress bar** — 16px tall, golden gradient fill, bold percentage text centred inside
+
+### System Gauges
+
+| Gauge | Source | CPU-Only Behaviour |
+|---|---|---|
+| CPU | psutil | ✅ Always works |
+| RAM | psutil | ✅ Always works |
+| GPU | pynvml | Shows N/A without NVIDIA GPU |
+| VRAM | pynvml | Shows N/A without NVIDIA GPU |
+
+### Hotkey Editor
+
+In Settings, click the hotkey field to enter capture mode — the field glows gold and shows "Press keys...". Press a 2-3 key combination (e.g., `Ctrl+Shift+T`), and the new hotkey is saved immediately. The push-to-talk hook re-registers live without suppressing the trigger keys.
+
+### Theme
+
+The Dashboard uses a premium **golden-brown** design system with:
+- Dark warm backgrounds (`#1C1510`, `#252018`)
+- Gold accent colors (`#D4A044`, `#F0C060`)
+- Gold-glow effects on focused inputs and active buttons
+- Smooth hover transitions
 
 ---
 
-## UI Guide — Minimal Ball Mode
+## UI Guide — Ball Mode (Default)
 
-Click the **-** button on the overlay to shrink Trixie into a branded floating ball (using `trixie-circular.jpeg`).
+Trixie launches in Ball Mode by default — a compact branded floating ball using `trixie-circular.jpeg`.
 
 ### Ball Interactions
 
 | Action | Effect |
 |---|---|
-| **Single-click** the ball | Toggle listening (start/stop recording) |
-| **Double-click** the ball | Restore the full expanded overlay |
-| **Right-click** the ball | Show/hide the text input box |
+| **Single-click** the ball | Open/close the text command input (300ms delay to prevent accidental triggers) |
+| **Double-click** the ball | Expand to the full translucent overlay |
+| **Right-click** the ball | Context menu — Open Dashboard / Quit Trixie |
 | **Drag** the ball | Reposition anywhere on screen |
 
 ### Ball Animations
 
 | State | Animation |
 |---|---|
-| **Idle** | Static branded ball (`trixie-circular.jpeg`) |
+| **Idle** | Subtle amber breathing glow ring |
 | **Listening** | Green pulsing neon ring |
 | **Transcribing** | Green arc spinner |
 | **Thinking / Executing** | Cyan arc spinner |
+
+### Feedback Buttons
+
+After intent execution, 👍/👎 buttons appear **below the ball** at 44×44px — large enough for emoji to render fully. The window expands vertically to accommodate them.
 
 ### Speech Bubble
 
@@ -396,16 +425,39 @@ When Trixie responds in ball mode, a speech bubble appears above the ball with t
 
 ---
 
+## UI Guide — Expanded Overlay
+
+Double-click the ball to expand to the full translucent overlay. It shows:
+
+| Section | What You See |
+|---|---|
+| **Header Bar** | Warm golden-brown gradient with Trixie logo — click to open Dashboard (hand cursor) |
+| **× Button** | Circular golden button — collapses back to Ball Mode |
+| **Status Dot** | 🟢 Green pulse = Listening · 🟡 Orange = Thinking/Executing · 🔴 Red = Error · ⚪ Gray = Idle |
+| **Status Text** | Current state: "Idle", "Listening...", "Transcribing...", "Thinking...", "Executing: open_app..." |
+| **Transcript** | "YOU:" label with your transcribed/typed command |
+| **Response** | "TRIXIE:" label with the action result or conversational answer |
+| **Feedback** | 44px 👍/👎 buttons centred above the text input when awaiting confirmation |
+| **Text Input** | Bottom text box — type commands and press Enter |
+
+The overlay is:
+- **Draggable** — click and drag anywhere to reposition
+- **Always-on-top** — stays above all other windows
+- **Translucent** — dark glassmorphic background with rounded corners
+- **Auto-resizing** — grows upward to fit long transcripts and responses
+
+---
+
 ## System Tray
 
-The system tray icon uses `trixie.ico` from the `assets/` folder. Right-click for:
+The system tray icon uses the branded `trixie.ico`. The taskbar also displays the Trixie icon via `SetCurrentProcessExplicitAppUserModelID`.
 
-| Menu Item | Action |
+| Action | Effect |
 |---|---|
-| **Status: Idle** | Shows current status (read-only) |
-| **Show/Hide Overlay** | Toggle the floating overlay visibility |
-| **Push to Talk (Ctrl + CapsLock)** | Trigger listening from the menu |
-| **Quit** | Fully exit Trixie |
+| **Double-click tray icon** | Open the Dashboard |
+| **Right-click → Show/Hide Overlay** | Toggle the floating overlay visibility |
+| **Right-click → Push to Talk** | Trigger listening from the menu |
+| **Right-click → Quit** | Fully exit Trixie and unhook all keyboard listeners |
 
 ---
 
@@ -454,28 +506,29 @@ Every discovered shortcut is added to the app resolution table. This means Trixi
 
 ## Model Management
 
-Trixie ships without large model files. Models are downloaded on demand:
+Trixie ships without large model files. All three models download automatically on first launch with live progress in the Dashboard:
 
-| Model | Trigger | Source | Size | Local Path |
-|---|---|---|---|---|
-| Faster-Whisper Medium EN | First voice command | HuggingFace snapshot | ~1.5 GB | `models/faster-whisper-medium.en/` |
-| Qwen 3 4B Q4_K_M GGUF | First LLM inference | Direct URL download | ~2.5 GB | `models/Qwen_Qwen3-4B-Q4_K_M.gguf` |
-| Piper Lessac voice | App startup | Direct URL download | ~15 MB | `models/en_US-lessac-medium.onnx` |
-| Piper voice config | App startup | Direct URL download | ~1 KB | `models/en_US-lessac-medium.onnx.json` |
+| Model | Source | Size | Local Path |
+|---|---|---|---|
+| Faster-Whisper Medium EN | HuggingFace snapshot | ~1.5 GB | `models/faster-whisper-medium.en/` |
+| Qwen 3 4B Q4_K_M GGUF | Direct URL download | ~2.5 GB | `models/Qwen_Qwen3-4B-Q4_K_M.gguf` |
+| Piper Lessac voice | Direct URL download | ~15 MB | `models/en_US-lessac-medium.onnx` |
+| Piper voice config | Direct URL download | ~1 KB | `models/en_US-lessac-medium.onnx.json` |
 
 ### Download Progress
 
-Downloads show a progress bar in the terminal:
+All downloads happen in background threads on startup. The Dashboard shows:
+- **Model cards** with live status: ⏳ downloading with percentage, ✅ ready
+- **16px progress bars** with golden gradient fill and bold centred % text
+- **Activity log** entries for each download start/complete/error
 
-```
-============================================================
-  Downloading: Qwen 3 4B (Intent Classification & Chat)
-  Size: ~2.5 GB
-============================================================
-  [################--------------] 53.2% - 1.33 / 2.50 GB
+Pre-download models before first use (headless):
+
+```powershell
+uv run python download_models.py
 ```
 
-Failed downloads are cleaned up (`.tmp` files removed). Retry by re-running the app or `download_models.py`.
+Failed downloads are cleaned up (`.tmp` files removed). Retry by re-running the app.
 
 ---
 
@@ -543,10 +596,41 @@ uv run python build.py
 
 This produces `dist/Trixie.exe` — a single-file PyInstaller executable with:
 - Python runtime + all dependencies
-- All `core/` and `ui/` modules
-- Hidden imports for keyboard, sounddevice, llama_cpp, faster_whisper, PySide6
+- All `core/`, `ui/`, and `assets/` modules
+- Hidden imports for keyboard, sounddevice, llama_cpp, faster_whisper, PySide6, pynvml
+
+### CPU + GPU Compatibility
+
+The built executable runs on **both CPU-only and NVIDIA GPU** environments without modification:
+
+| Component | CPU-only | NVIDIA GPU |
+|---|---|---|
+| LLM inference | CPU (slower, but functional) | GPU-accelerated via CUDA |
+| Whisper STT | CPU int8 | CUDA float16 |
+| Piper TTS | CPU ONNX | CPU ONNX |
+| Dashboard GPU gauges | Shows N/A | Shows real-time GPU/VRAM |
 
 **Not bundled:** The ~4 GB of model files. On first run, they download into `models/` next to the executable. For offline distribution, ship the populated `models/` folder alongside the EXE.
+
+---
+
+## Roadmap
+
+### Planned Features (Next)
+
+| Feature | Description |
+|---|---|
+| **Macro Manager UI** | A new section below AI Models in the Dashboard where users can register, name, edit, and delete macros. Named macros can then be triggered by voice ("Run the macro morning setup"). |
+| **Voice Responses** | When Trixie answers a general query, it speaks the response aloud via Piper TTS. This will be toggleable in Dashboard settings (on/off). |
+| **Text Narration** | Select/highlight text in any application, then click the Trixie ball — Trixie reads the selected text aloud using Piper TTS. |
+
+### Future Ideas
+
+- **Conversation Mode** — multi-turn dialogue instead of single-shot intent classification
+- **Custom Wake Word** — always-on listening with a trigger phrase
+- **Plugin System** — user-defined intents and executors
+- **Multiple TTS Voices** — choose from different Piper voice models
+- **Cross-Platform** — macOS and Linux support
 
 ---
 
@@ -558,33 +642,35 @@ Trixie is a local-first, voice-controlled Windows desktop assistant. It uses thr
 
 | Component | File | Role |
 |---|---|---|
-| **App Controller** | `main.py` | Entry point. Wires all services, manages feedback loop, handles push-to-talk hotkey. |
+| **App Controller** | `main.py` | Entry point. Wires all services, manages feedback loop, background model downloads, configurable push-to-talk hotkey. |
 | **Audio Engine** | `core/audio.py` | Microphone capture at 16kHz mono. Lazy-loads Faster-Whisper. VAD-filtered transcription with command priming. |
 | **LLM Engine** | `core/llm_engine.py` | Qwen 3 4B via llama-cpp-python. Structured JSON intent output. Think-block stripping and robust JSON extraction. |
 | **Context Manager** | `core/context.py` | System prompt with intent examples. Short-term memory from last 5 interactions. |
-| **Command Executor** | `core/executor.py` | Resolves app names via whitelist + dynamic scanning. Executes open/close/type/hotkey/script/delay actions. |
+| **Command Executor** | `core/executor.py` | Resolves app names via dynamic scanning. Executes open/close/type/hotkey/script/delay actions. |
 | **Macro Manager** | `core/macro_manager.py` | Creates macros from history, binds hotkeys, replays action sequences. |
 | **TTS Engine** | `core/tts_engine.py` | Piper neural TTS. WAV synthesis → PCM16 → float32 → sounddevice playback. Async thread. |
-| **Model Manager** | `core/model_manager.py` | Downloads models from HuggingFace (snapshots and direct URLs). Progress bars. Atomic writes. |
+| **Model Manager** | `core/model_manager.py` | Downloads models from HuggingFace with Qt progress signals (`object` type for large files). Atomic writes. |
 | **DB Manager** | `core/db.py` | SQLite with 3 tables: history (interactions + feedback), intent_cache (verified mappings), macros. |
-| **UI Engine** | `ui/app.py` | PySide6 floating overlay (expanded + ball mode), system tray icon, text input, feedback buttons. |
-| **Dashboard** | `ui/dashboard.py` | PySide6 main window with system gauges, model cards, activity log, and settings. |
-| **Theme** | `ui/theme.py` | Design system — colors, fonts, dimensions, global QSS stylesheet. |
-| **Widgets** | `ui/widgets/` | Reusable gauge, stat card, and model card widgets. |
-| **System Monitor** | `core/system_monitor.py` | CPU/RAM/GPU stats collector via psutil and optional pynvml. |
-| **Settings** | `core/settings.py` | JSON settings persistence at %LOCALAPPDATA%/Trixie/. |
+| **UI Engine** | `ui/app.py` | PySide6 floating overlay (ball mode default + expanded), system tray, text input, feedback buttons, right-click context menu. |
+| **Dashboard** | `ui/dashboard.py` | PySide6 main window with system gauges, model cards with progress bars, activity log, hotkey editor, and settings. |
+| **Theme** | `ui/theme.py` | Golden-brown design system — colors, fonts, dimensions, gold-glow effects, global QSS stylesheet. |
+| **Widgets** | `ui/widgets/` | Reusable GaugeWidget, ModelCard (16px progress bar), StatCard with gradient backgrounds. |
+| **System Monitor** | `core/system_monitor.py` | CPU/RAM/GPU/VRAM stats via psutil and optional pynvml (graceful N/A). |
+| **Settings** | `core/settings.py` | JSON settings persistence at %LOCALAPPDATA%/Trixie/ (atomic writes). |
 | **Startup Manager** | `core/startup_manager.py` | Windows Registry startup management. |
 
 ### Technology Stack
 
 - **Language**: Python 3.10+
-- **UI Framework**: PySide6
+- **UI Framework**: PySide6 (migrated from PyQt6)
+- **Design System**: Golden-brown theme with gold-glow accents
 - **STT**: Faster-Whisper (CTranslate2)
 - **LLM**: Qwen 3 4B GGUF via llama-cpp-python
 - **TTS**: Piper (ONNX Runtime)
-- **Desktop Automation**: pyautogui, keyboard
+- **Desktop Automation**: pyautogui, keyboard (no key suppression)
+- **System Monitoring**: psutil + pynvml (optional)
 - **Database**: SQLite3
-- **Packaging**: PyInstaller (single-file .exe)
+- **Packaging**: PyInstaller (single-file .exe, CPU + GPU compatible)
 - **Platform**: Windows 10/11
 
 ---

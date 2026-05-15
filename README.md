@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/STT-Faster--Whisper-FF6F00?style=flat-square&logo=huggingface&logoColor=white" alt="Whisper" />
   <img src="https://img.shields.io/badge/LLM-Qwen3--4B--GGUF-blueviolet?style=flat-square" alt="Qwen" />
   <img src="https://img.shields.io/badge/TTS-Piper_Neural-41CD52?style=flat-square" alt="Piper" />
-  <img src="https://img.shields.io/badge/ui-PyQt6-41CD52?style=flat-square&logo=qt&logoColor=white" alt="PyQt6" />
+  <img src="https://img.shields.io/badge/ui-PySide6-41CD52?style=flat-square&logo=qt&logoColor=white" alt="PySide6" />
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" />
 </p>
 
@@ -32,7 +32,7 @@
 - [Project Structure](#-project-structure)
 - [Dependencies](#-dependencies)
 - [Configuration](#-configuration)
-- [Improvement Ideas](#-improvement-ideas)
+- [Roadmap](#-roadmap)
 - [Author](#-author)
 
 ---
@@ -43,7 +43,7 @@
 
 No cloud is required for normal use. Model files (~4 GB total) are downloaded on first run and then loaded from the local `models/` folder.
 
-> Trixie is **CPU-first by design**. A GPU is optional — it accelerates inference but is never required. The app runs on any Windows 10/11 machine with 16 GB RAM.
+> Trixie is **CPU-first by design**. A GPU is optional — it accelerates inference but is never required. The built EXE runs on **both CPU-only and NVIDIA GPU** systems without modification. The app runs on any Windows 10/11 machine with 16 GB RAM.
 
 ---
 
@@ -68,15 +68,17 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 ### 🎙️ Voice Input
 | Feature | Description |
 |---|---|
-| **Push-to-Talk** | Hold `Ctrl + CapsLock` to record; release to transcribe and process |
+| **Push-to-Talk** | Customisable hotkey (default: `Ctrl + CapsLock`) — change in Dashboard settings |
 | **Local STT** | Faster-Whisper Medium English — runs on GPU (float16) or CPU (int8) |
 | **Command Priming** | Transcription prompt biased toward common commands and app names for better accuracy |
 | **VAD Filtering** | Voice Activity Detection filters silence — min 500ms silence threshold |
+| **No Key Suppression** | The trigger key still functions normally — CapsLock toggles, Space types, etc. |
 
 ### 🧠 Intent Classification
 | Feature | Description |
 |---|---|
 | **Local LLM** | Qwen 3 4B (Q4_K_M GGUF) via `llama-cpp-python` — 4-bit quantized, ~2.5 GB |
+| **Auto-Download** | LLM model downloads automatically on first launch with progress in Dashboard |
 | **Structured Output** | LLM outputs JSON with `intent` and `target` fields |
 | **Think-Block Stripping** | Automatically removes Qwen 3's `<think>` reasoning blocks |
 | **Robust JSON Parsing** | Handles code fences, nested objects, and partial outputs |
@@ -93,7 +95,7 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 ### 🖥️ Desktop Actions
 | Feature | Description |
 |---|---|
-| **App Launch** | Opens any app via whitelist + dynamic Start Menu/Desktop shortcut scanning |
+| **App Launch** | Opens any app via dynamic Start Menu/Desktop shortcut scanning |
 | **App Close** | Kills processes by executable name via `taskkill` |
 | **Text Typing** | Types text into the active window via `pyautogui` |
 | **Hotkeys** | Presses keyboard shortcuts (e.g., `ctrl+s`, `alt+f4`) |
@@ -116,69 +118,83 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 | **Async Playback** | Speech runs in a background thread — never blocks the UI |
 | **WAV Pipeline** | Synthesizes to in-memory WAV buffer → PCM16 → float32 → `sounddevice` |
 
-### 🖥️ Desktop UI
+### 🏠 Dashboard (Command Centre)
 | Feature | Description |
 |---|---|
-| **Floating Overlay** | Translucent glassmorphic panel — shows status, transcript, and response |
-| **Minimal Ball Mode** | Shrinks to a branded floating ball (`trixie-circular.jpeg`) with speech bubble responses |
-| **Neon Animations** | Green pulse ring when listening; cyan arc spinner when thinking |
-| **System Tray** | Branded tray icon (`trixie.ico`) with show/hide/quit context menu |
-| **Text Input** | Type commands directly via the input box — bypasses STT |
-| **Feedback Buttons** | 👍/👎 buttons for training the intent cache |
-| **Dynamic Resize** | Overlay grows upward to fit long transcripts and responses |
+| **System Gauges** | Real-time CPU, RAM, GPU, VRAM dials — GPU shows N/A gracefully on CPU-only |
+| **AI Model Cards** | Status per model (STT, LLM, TTS) with 16px progress bars and % during download |
+| **Activity Log** | Timestamped feed of downloads, engine init, command execution, errors |
+| **Settings** | Start-at-startup toggle, customisable push-to-talk hotkey (2-3 key combos) |
+| **80% Screen Launch** | Dashboard opens centred at 80% of screen width & height |
+| **Golden-Brown Theme** | Premium warm aesthetic with gold-glow accents on interactive elements |
+| **Always-On Tray** | Closing the dashboard silently minimises to system tray — no notification |
+
+### 🖥️ Floating Overlay & Ball Mode
+| Feature | Description |
+|---|---|
+| **Ball Mode Default** | Trixie starts as a compact branded ball — single-click opens text input, double-click expands |
+| **Right-Click Menu** | Context menu on the ball: Open Dashboard / Quit |
+| **Expanded Overlay** | Translucent glassmorphic panel with status, transcript, and response |
+| **Logo Click** | Click the header logo in expanded mode → opens Dashboard (hand cursor) |
+| **× Close Button** | Circular golden button collapses back to Ball Mode |
+| **Neon Animations** | Green pulse when listening; cyan sweep when thinking; amber breathing at idle |
+| **Feedback Buttons** | 44px 👍/👎 centred below the ball or above text input — fully visible |
 | **Draggable** | Click and drag to reposition anywhere on screen |
+| **Click Delay** | 300ms delay on single-click prevents accidental text input triggers |
 
 ---
 
 ## 🏗 Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      Trixie Desktop App                             │
-│                                                                     │
-│  ┌────────────────┐    ┌─────────────────────────────────────────┐  │
-│  │   Keyboard     │    │          UI Layer (PyQt6)               │  │
-│  │   Listener     │    │                                         │  │
-│  │                │    │  ┌──────────────┐  ┌─────────────────┐  │  │
-│  │ Ctrl+CapsLock  ├───►│  │   Floating   │  │   System Tray   │  │  │
-│  │ push-to-talk   │    │  │   Overlay    │  │   Icon + Menu   │  │  │
-│  │ hook           │    │  │   (expanded  │  └─────────────────┘  │  │
-│  └────────────────┘    │  │    + ball)   │                       │  │
-│                        │  └──────┬───────┘                       │  │
-│                        │         │ text input / voice trigger    │  │
-│                        └─────────┼───────────────────────────────┘  │
-│                                  │                                  │
-│  ┌───────────────────────────────┼───────────────────────────────┐  │
-│  │                     Core Engine                               │  │
-│  │                                                               │  │
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Trixie Desktop App                              │
+│                                                                      │
+│  ┌────────────────┐    ┌──────────────────────────────────────────┐  │
+│  │   Keyboard     │    │        UI Layer (PySide6)                │  │
+│  │   Listener     │    │                                          │  │
+│  │                │    │  ┌──────────┐  ┌──────────┐ ┌────────┐  │  │
+│  │ Configurable   ├───►│  │ Dashboard│  │ Floating │ │ System │  │  │
+│  │ push-to-talk   │    │  │ (gauges, │  │ Overlay  │ │ Tray   │  │  │
+│  │ hotkey         │    │  │  models, │  │ (ball +  │ │ Icon   │  │  │
+│  └────────────────┘    │  │  logs,   │  │  expand) │ └────────┘  │  │
+│                        │  │  settings│  └────┬─────┘             │  │
+│                        │  └──────────┘       │                   │  │
+│                        └─────────────────────┼───────────────────┘  │
+│                                              │                      │
+│  ┌───────────────────────────────────────────┼───────────────────┐  │
+│  │                     Core Engine                                │  │
+│  │                                                                │  │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │  │
 │  │  │ Audio Engine │  │ LLM Engine   │  │ Command Executor   │   │  │
-│  │  │              │  │              │  │                    │   │  │
 │  │  │ Microphone   │  │ Qwen 3 4B    │  │ open/close apps    │   │  │
-│  │  │ capture at   │  │ GGUF via     │  │ type text          │   │  │
-│  │  │ 16kHz mono   │  │ llama.cpp    │  │ press hotkeys      │   │  │
-│  │  │      ↓       │  │      ↓       │  │ run scripts        │   │  │
-│  │  │ Faster-      │  │ JSON intent  │  │ macro playback     │   │  │
-│  │  │ Whisper STT  │  │ extraction   │  └────────────────────┘   │  │
-│  │  └──────────────┘  └──────────────┘                           │  │
-│  │                                                               │  │
+│  │  │ 16kHz mono   │  │ GGUF via     │  │ type text          │   │  │
+│  │  │ Faster-      │  │ llama.cpp    │  │ press hotkeys      │   │  │
+│  │  │ Whisper STT  │  │ JSON intent  │  │ macro playback     │   │  │
+│  │  └──────────────┘  └──────────────┘  └────────────────────┘   │  │
+│  │                                                                │  │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │  │
 │  │  │ Context      │  │ DB Manager   │  │ Macro Manager      │   │  │
-│  │  │ Manager      │  │              │  │                    │   │  │
-│  │  │ System       │  │ SQLite:      │  │ Create from        │   │  │
-│  │  │ prompt +     │  │ history,     │  │ history, bind      │   │  │
-│  │  │ short-term   │  │ intent cache │  │ hotkeys, replay    │   │  │
-│  │  │ memory       │  │ macros       │  └────────────────────┘   │  │
+│  │  │ Manager      │  │ SQLite:      │  │ Create, bind       │   │  │
+│  │  │ System       │  │ history,     │  │ hotkeys, replay    │   │  │
+│  │  │ prompt +     │  │ intent cache │  └────────────────────┘   │  │
+│  │  │ memory       │  │ macros       │                           │  │
 │  │  └──────────────┘  └──────────────┘                           │  │
-│  │                                                               │  │
+│  │                                                                │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │  │
+│  │  │ TTS Engine   │  │ Model        │  │ System Monitor     │   │  │
+│  │  │ Piper neural │  │ Manager      │  │ CPU/RAM/GPU/VRAM   │   │  │
+│  │  │ offline      │  │ Auto-download│  │ real-time gauges   │   │  │
+│  │  │ synthesis    │  │ from HF      │  │ (pynvml optional)  │   │  │
+│  │  └──────────────┘  └──────────────┘  └────────────────────┘   │  │
+│  │                                                                │  │
 │  │  ┌──────────────┐  ┌──────────────┐                           │  │
-│  │  │ TTS Engine   │  │ Model        │                           │  │
-│  │  │ Piper neural │  │ Manager      │                           │  │
-│  │  │ offline      │  │ Auto-download│                           │  │
-│  │  │ synthesis    │  │ from HF      │                           │  │
+│  │  │ Settings     │  │ Startup      │                           │  │
+│  │  │ JSON atomic  │  │ Manager      │                           │  │
+│  │  │ persistence  │  │ Win Registry │                           │  │
 │  │  └──────────────┘  └──────────────┘                           │  │
-│  └───────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -186,7 +202,7 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 ## 🔄 Pipeline Flow
 
 ```
-Hold Ctrl+CapsLock → Microphone captures 16kHz mono audio
+Hold hotkey (configurable) → Microphone captures 16kHz mono audio
      │
      ▼
 Release key → Audio sent to Faster-Whisper (GPU float16 / CPU int8)
@@ -231,7 +247,7 @@ Interaction logged to SQLite (timestamp, input, intent, status, feedback)
 
 ## 🧪 Model Pipeline
 
-Trixie ships without large model files. On first use it downloads three models:
+Trixie ships without large model files. On first use it downloads three models with live progress in the Dashboard:
 
 | Model | Engine | Size | Purpose | Local Path |
 |---|---|---|---|---|
@@ -241,11 +257,11 @@ Trixie ships without large model files. On first use it downloads three models:
 
 ### Hardware Adaptation
 
-| Hardware | Whisper | LLM | TTS |
-|---|---|---|---|
-| **NVIDIA GPU** | CUDA, float16 | All layers on GPU (`n_gpu_layers=-1`) | CPU (ONNX) |
-| **AMD GPU** | CPU, int8 | Vulkan backend (via install.py) | CPU (ONNX) |
-| **CPU only** | CPU, int8 | CPU inference | CPU (ONNX) |
+| Hardware | Whisper | LLM | TTS | Dashboard GPU Gauges |
+|---|---|---|---|---|
+| **NVIDIA GPU** | CUDA, float16 | All layers on GPU (`n_gpu_layers=-1`) | CPU (ONNX) | Active (pynvml) |
+| **AMD GPU** | CPU, int8 | Vulkan backend (via install.py) | CPU (ONNX) | N/A |
+| **CPU only** | CPU, int8 | CPU inference | CPU (ONNX) | N/A |
 
 Pre-download all models before first use:
 
@@ -283,18 +299,19 @@ uv run python main.py
 ```
 
 On first launch:
-- Missing models auto-download from HuggingFace (~4 GB total)
-- GPU is auto-detected for Whisper (CUDA float16 / CPU int8)
-- The floating overlay and system tray icon appear
-- The first voice command triggers model loading
+- The **Dashboard** opens immediately (80% of screen, centred)
+- Missing models auto-download in background with live progress bars
+- The floating **ball** appears bottom-right
+- System gauges start showing CPU/RAM in real-time
+- GPU gauges show N/A gracefully if no NVIDIA GPU is detected
 
 ### Use It
 
-1. **Hold `Ctrl + CapsLock`** — Trixie starts listening (green pulse)
+1. **Hold your push-to-talk hotkey** (default: `Ctrl + CapsLock`) — Trixie starts listening (green pulse)
 2. **Speak a command** — e.g., "Open Chrome", "Type hello world", "Press ctrl+s"
 3. **Release the hotkey** — Trixie transcribes, classifies intent, and executes
 4. **Confirm with 👍/👎** — positive feedback caches the command for instant future use
-5. **Or type** — use the text input box for exact-wording commands
+5. **Or type** — left-click the ball or use the text input in the expanded overlay
 
 ---
 
@@ -307,7 +324,7 @@ python install.py
 ```
 
 This script:
-1. Installs base dependencies from `requirements.txt`
+1. Installs base dependencies from `pyproject.toml`
 2. Detects your GPU vendor via WMIC (NVIDIA / AMD / Intel)
 3. Rebuilds `llama-cpp-python` with the appropriate backend:
    - **NVIDIA** → `CMAKE_ARGS="-DGGML_CUDA=on"`
@@ -322,7 +339,7 @@ This script:
 
 ```powershell
 uv sync --extra build
-uv run python package.py
+uv run python build.py
 ```
 
 Output:
@@ -334,14 +351,25 @@ dist/
 ```
 
 ### What's Bundled Inside the EXE
-- Python runtime + all dependencies (llama-cpp-python, faster-whisper, PyQt6, piper-tts, etc.)
-- All `core/` and `ui/` modules
-- Hidden imports for keyboard, sounddevice, llama_cpp, faster_whisper
+- Python runtime + all dependencies (llama-cpp-python, faster-whisper, PySide6, piper-tts, etc.)
+- All `core/`, `ui/`, and `assets/` modules
+- Hidden imports for keyboard, sounddevice, llama_cpp, faster_whisper, pynvml
 
 ### What Downloads on First Run
 - **STT model**: Faster-Whisper Medium English (~1.5 GB) → `models/faster-whisper-medium.en/`
 - **LLM model**: Qwen 3 4B GGUF (~2.5 GB) → `models/Qwen_Qwen3-4B-Q4_K_M.gguf`
 - **TTS model**: Piper Lessac voice + config (~15 MB) → `models/en_US-lessac-medium.onnx`
+
+### CPU + GPU Compatibility
+
+The built executable runs on **both CPU-only and NVIDIA GPU** environments without modification:
+
+| Component | CPU-only | NVIDIA GPU |
+|---|---|---|
+| LLM inference | CPU (slower, but functional) | GPU-accelerated via CUDA |
+| Whisper STT | CPU int8 | CUDA float16 |
+| Piper TTS | CPU ONNX | CPU ONNX |
+| Dashboard GPU gauges | Shows N/A | Shows real-time GPU/VRAM |
 
 > **Why not bundle the models?** The models total ~4 GB — bundling would create an impractically large executable. Instead, they download once on first launch and are cached permanently in `models/`.
 
@@ -353,32 +381,43 @@ For offline distribution, ship the populated `models/` folder beside `Trixie.exe
 
 ```
 Trixie/
-├── main.py                      # App entry point — orchestrator + feedback loop (233 lines)
+├── main.py                      # App entry point — orchestrator + background model downloads
 ├── config.json                  # Runtime configuration (model paths, Whisper settings)
-├── install.py                   # GPU-aware dependency installer (71 lines)
-├── package.py                   # PyInstaller build script (45 lines)
-├── download_models.py           # Pre-downloads all runtime models (28 lines)
+├── build.py                     # PyInstaller build pipeline (CPU + GPU compatible)
+├── build.spec                   # PyInstaller spec file
+├── install.py                   # GPU-aware dependency installer
+├── download_models.py           # Pre-downloads all runtime models
 ├── pyproject.toml               # Project metadata + dependencies (uv/pip)
 │
 ├── core/                        # Backend engine
 │   ├── __init__.py
-│   ├── audio.py                 # Microphone capture + Faster-Whisper STT (139 lines)
-│   ├── llm_engine.py            # Qwen 3 4B intent classifier via llama.cpp (107 lines)
-│   ├── context.py               # System prompt + short-term memory (31 lines)
-│   ├── executor.py              # Desktop action execution + app resolution (185 lines)
-│   ├── macro_manager.py         # Macro creation, storage, and hotkey binding (69 lines)
-│   ├── tts_engine.py            # Piper neural TTS with async playback (70 lines)
-│   ├── model_manager.py         # HuggingFace model download + caching (127 lines)
-│   └── db.py                    # SQLite: history, intent cache, macros (147 lines)
+│   ├── audio.py                 # Microphone capture + Faster-Whisper STT
+│   ├── llm_engine.py            # Qwen 3 4B intent classifier via llama.cpp
+│   ├── context.py               # System prompt + short-term memory
+│   ├── executor.py              # Desktop action execution + app resolution
+│   ├── macro_manager.py         # Macro creation, storage, and hotkey binding
+│   ├── tts_engine.py            # Piper neural TTS with async playback
+│   ├── model_manager.py         # HuggingFace download + Qt progress signals
+│   ├── db.py                    # SQLite: history, intent cache, macros
+│   ├── settings.py              # Persistent JSON settings (atomic writes)
+│   ├── system_monitor.py        # Real-time CPU/RAM/GPU/VRAM monitoring
+│   └── startup_manager.py       # Windows Registry startup integration
 │
-├── ui/                          # PyQt6 GUI
+├── ui/                          # PySide6 GUI
 │   ├── __init__.py
-│   └── app.py                   # Floating overlay + system tray + UIEngine (546 lines)
+│   ├── app.py                   # Floating overlay + ball mode + system tray
+│   ├── dashboard.py             # Dashboard window + hotkey editor
+│   ├── theme.py                 # Golden-brown design system + QSS stylesheet
+│   └── widgets/
+│       ├── __init__.py
+│       ├── gauge_widget.py      # Animated circular gauge with QPropertyAnimation
+│       ├── model_card.py        # Model status card with download progress bar
+│       └── stat_card.py         # Stat card with gradient background
 │
 ├── assets/                      # Branded visual assets
 │   ├── trixie.ico               # Windows icon (EXE, taskbar, window title)
-│   ├── trixie.jpeg              # Logo image (README, documentation)
-│   └── trixie-circular.jpeg     # Circular avatar (floating ball, system tray)
+│   ├── trixie.jpeg              # Logo image (README, dashboard header)
+│   └── trixie-circular.jpeg     # Circular avatar (floating ball)
 │
 ├── models/                      # Runtime model storage (auto-populated, gitignored)
 ├── logs/                        # SQLite database storage (gitignored)
@@ -399,7 +438,7 @@ Trixie/
 | `faster-whisper` | Local speech-to-text (CTranslate2 backend) |
 | `huggingface-hub` | Model downloading from HuggingFace |
 | `llama-cpp-python` | Local LLM inference for Qwen 3 4B GGUF |
-| `PyQt6` | Desktop UI framework (overlay, tray, dialogs) |
+| `PySide6` | Desktop UI framework (overlay, dashboard, tray) |
 | `piper-tts` | Offline neural text-to-speech |
 | `onnxruntime` | ONNX model runtime for Piper TTS |
 | `keyboard` | Global hotkey hooks (push-to-talk) |
@@ -407,9 +446,12 @@ Trixie/
 | `numpy` | Audio array processing |
 | `scipy` | Signal processing utilities |
 | `pyautogui` | Desktop automation (typing, hotkeys) |
+| `psutil` | System resource monitoring (CPU, RAM) |
+| `platformdirs` | Cross-platform app data directory resolution |
 | `mss` | Screen capture utilities |
 | `Pillow` | Image processing |
-| `pyinstaller` | Standalone EXE packaging (optional build dependency) |
+| `pynvml` | NVIDIA GPU monitoring (optional `[gpu]` extra) |
+| `pyinstaller` | Standalone EXE packaging (optional `[build]` extra) |
 
 ---
 
@@ -426,6 +468,13 @@ All runtime configuration lives in [`config.json`](config.json):
 | `whisper_compute_type` | `default` | STT precision: `default`, `float16`, or `int8` |
 | `cache_threshold` | `0.80` | Fuzzy-match threshold for intent cache (0.0–1.0) |
 
+### Dashboard Settings (`%LOCALAPPDATA%/Trixie/settings.json`)
+
+| Key | Default | Description |
+|---|---|---|
+| `start_at_startup` | `true` | Add/remove Windows Registry startup entry |
+| `hotkey` | `ctrl+caps lock` | Push-to-talk key combination (2-3 keys) |
+
 ### Auto-Detected Settings
 
 | Hardware | `whisper_device` resolves to | `whisper_compute_type` resolves to |
@@ -435,25 +484,33 @@ All runtime configuration lives in [`config.json`](config.json):
 
 ---
 
-## 💡 Improvement Ideas
+## 🗺️ Roadmap
 
-### High Impact
+### Planned Features
+
+| Feature | Description | Status |
+|---|---|---|
+| **Macro Manager UI** | Dashboard section below AI Models where users can register, name, edit, and delete macros — then trigger them by voice | 🔜 Next |
+| **Voice Responses** | When a general query is answered, Trixie speaks the response aloud via Piper TTS (toggle on/off in Dashboard settings) | 🔜 Next |
+| **Text Narration** | Select/highlight text anywhere, then click the Trixie ball — Trixie reads the selected text aloud | 🔜 Next |
+
+### Improvement Ideas
+
+#### High Impact
 - **Conversation Mode** — Multi-turn dialogue for complex queries instead of single-shot intent classification
 - **Custom Wake Word** — Always-on listening with a wake word (e.g., "Hey Trixie") instead of push-to-talk
 - **Plugin System** — Let users add custom intents and executors without modifying core code
-- **Cross-Platform** — Port to macOS (Core Audio) and Linux (PulseAudio) for microphone and app control
+- **Cross-Platform** — Port to macOS (Core Audio) and Linux (PulseAudio)
 
-### Medium Impact
+#### Medium Impact
 - **Streaming TTS** — Stream Piper output as it generates for reduced perceived latency
 - **Multiple Voices** — Let users choose from different Piper voice models
-- **Macro Editor** — Visual UI for editing, reordering, and testing macro steps
 - **Command Suggestions** — Auto-suggest likely commands based on history patterns
 
-### Polish
-- **Overlay Themes** — Light/dark/custom theme options for the floating overlay
+#### Polish
+- **Overlay Themes** — Additional theme presets beyond golden-brown
 - **Accessibility** — Screen reader support and keyboard-only navigation
 - **Auto-Update** — Check GitHub releases for new versions on startup
-- **Telemetry Dashboard** — Show inference latency, cache hit rate, and model memory usage
 
 ---
 

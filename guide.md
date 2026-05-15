@@ -16,7 +16,7 @@ uv sync
 uv run python main.py
 ```
 
-On first launch, runtime models (~4 GB total) auto-download from HuggingFace. Subsequent launches load from the local `models/` folder.
+On first launch, the **Dashboard** opens immediately showing system gauges and model status cards. Runtime models (~4 GB total) auto-download from HuggingFace in the background with live progress bars. Subsequent launches load from the local `models/` folder.
 
 ### Option B — Standalone EXE
 
@@ -27,7 +27,7 @@ Just double-click Trixie.exe
 ```
 
 > [!NOTE]
-> The EXE bundles all Python dependencies inside a single file. The AI models (~4 GB) are **not** bundled — they download automatically on first use and are cached locally in `models/`.
+> The EXE bundles all Python dependencies inside a single file. It runs on **both CPU-only and NVIDIA GPU** environments — GPU monitoring gracefully shows N/A on systems without an NVIDIA GPU. AI models (~4 GB) are **not** bundled — they download automatically on first use and are cached locally in `models/`.
 
 ## 🔧 GPU Acceleration (Optional)
 
@@ -57,19 +57,19 @@ Downloads all three runtime models before launching, so the first command isn't 
 
 ```powershell
 uv sync --extra build
-uv run python package.py
+uv run python build.py
 ```
 
-Output: `dist/Trixie.exe` — a fully self-contained executable.
+Output: `dist/Trixie.exe` — a fully self-contained executable that works on both CPU-only and NVIDIA GPU environments.
 
-**What's bundled:** All Python runtime + dependencies (llama-cpp-python, faster-whisper, PyQt6, piper-tts, etc.) + all core/ui modules.
+**What's bundled:** All Python runtime + dependencies (llama-cpp-python, faster-whisper, PySide6, piper-tts, etc.) + all core/ui modules.
 
 **What's NOT bundled (downloads on first run):** The ~4 GB of AI model files — cached at `models/` next to the executable. For offline distribution, ship the `models/` folder beside the EXE.
 
 ## 🎯 How to Use
 
-1. **Launch Trixie** — the floating overlay appears bottom-right and a system tray icon appears.
-2. **Hold `Ctrl + CapsLock`** — Trixie starts listening (green pulse animation).
+1. **Launch Trixie** — the Dashboard opens showing system stats and model download progress. The floating ball appears bottom-right. A system tray icon appears in the taskbar.
+2. **Hold your push-to-talk hotkey** (default: `Ctrl + CapsLock`) — Trixie starts listening (green pulse animation on the ball).
 3. **Speak a command** — keep it short and direct.
 4. **Release the hotkey** — Trixie transcribes → classifies intent → executes the action.
 5. **Confirm with 👍/👎** — positive feedback caches the command for instant future use.
@@ -95,20 +95,52 @@ Hello
 
 ## ⌨️ Typing Instead of Speaking
 
-Use the text box at the bottom of the floating overlay. Type a command and press `Enter`. This bypasses speech-to-text but uses the same intent engine and cache.
+**Ball mode:** Left-click the ball to open a text input field. Type a command and press `Enter`. This bypasses speech-to-text but uses the same intent engine and cache.
 
-## 🔵 Minimal Ball Mode
+**Expanded overlay:** Use the text box at the bottom of the translucent window.
 
-Click the **-** button on the overlay to shrink Trixie into a branded floating ball (using `trixie-circular.jpeg`).
+## 🔵 Minimal Ball Mode (Default)
+
+Trixie launches in Ball Mode by default — a branded floating circular avatar.
 
 | Action | Effect |
 |---|---|
-| **Single-click** the ball | Start/stop listening |
-| **Double-click** the ball | Restore the full overlay |
-| **Right-click** the ball | Show/hide the text input |
+| **Single-click** the ball | Open/close the text command input |
+| **Double-click** the ball | Expand to the full translucent overlay |
+| **Right-click** the ball | Context menu — Open Dashboard or Quit |
 | **Drag** the ball | Reposition anywhere on screen |
 
 Responses appear as a speech bubble above the ball, auto-hiding after a duration based on word count (5–15 seconds).
+
+### Expanded Overlay
+
+When you double-click the ball, the full translucent overlay appears showing status, transcript, and response text.
+
+| Element | Description |
+|---|---|
+| **Header bar** | Warm golden-brown gradient with Trixie logo — click to open Dashboard |
+| **× button** | Collapses back to Ball Mode |
+| **Status dot** | Green = listening, yellow = thinking, red = error |
+| **Text input** | Type commands at the bottom — press Enter to execute |
+| **👍/👎 buttons** | Appear after intent execution for feedback (larger, centred) |
+
+## 🏠 Dashboard
+
+The Dashboard is the command centre that opens at launch (80% of screen size, centred).
+
+| Section | Description |
+|---|---|
+| **System Resources** | Real-time CPU, RAM, GPU, and VRAM gauges (GPU shows N/A without NVIDIA) |
+| **AI Models** | Status cards for STT, LLM, and TTS — show download progress bars with percentage |
+| **Recent Activity** | Timestamped activity log — downloads, engine init, commands, errors |
+| **Settings** | Start at startup toggle, customisable push-to-talk hotkey (2-3 key combos) |
+
+**Opening the Dashboard:**
+- Click the logo/header in the expanded overlay
+- Right-click the ball → "Open Dashboard"
+- Double-click the system tray icon
+
+**Closing the Dashboard:** Always minimises silently to the system tray — never fully exits.
 
 ## ⚡ Intent Cache (How Trixie Gets Faster)
 
@@ -122,7 +154,17 @@ Next time you say anything similar (≥80% fuzzy match), the LLM is **completely
 
 ## ⚙️ Configuration
 
-Runtime settings in [`config.json`](config.json):
+### Dashboard Settings (persisted to `%LOCALAPPDATA%/Trixie/settings.json`)
+
+| Setting | Description |
+|---|---|
+| **Start at system startup** | Toggle to add/remove Windows Registry startup entry |
+| **Push-to-talk hotkey** | Click the field, press a 2-3 key combo (e.g., `Ctrl+Shift+T`) — saves immediately |
+
+> [!TIP]
+> The hotkey doesn't suppress the trigger key — if your hotkey is `Ctrl+CapsLock`, CapsLock still toggles normally. Push-to-talk only activates when the full combo is pressed together.
+
+### Runtime config in [`config.json`](config.json)
 
 | Setting | Default | Description |
 |---|---|---|
@@ -136,6 +178,7 @@ Runtime settings in [`config.json`](config.json):
 
 - **Windows-only** — keyboard hooks and app resolution use Windows-specific APIs.
 - **CPU-first design** — no GPU required. CUDA accelerates inference but is never mandatory.
+- **Cross-environment EXE** — the built executable runs on both CPU-only and NVIDIA GPU systems.
 - **First launch is slow** — models (~4 GB) download from HuggingFace. Subsequent launches load from disk.
 - **First voice command is slow** — the Whisper model loads lazily on the first voice command (~5–10s on CPU).
 - **Microphone** — Trixie uses the Windows default input device via `sounddevice`. Check Sound Settings if no audio is captured.
@@ -149,15 +192,19 @@ Runtime settings in [`config.json`](config.json):
 |---|---|
 | `main.py` | App entry point and orchestrator |
 | `config.json` | Runtime model and device settings |
+| `build.py` | PyInstaller build script (CPU + GPU compatible) |
 | `download_models.py` | Pre-downloads all runtime models |
 | `install.py` | GPU-aware dependency installer |
-| `package.py` | PyInstaller build script |
 | `core/audio.py` | Microphone capture + Whisper STT |
 | `core/llm_engine.py` | Qwen 3 4B intent classifier |
 | `core/executor.py` | Desktop action execution + app resolution |
 | `core/tts_engine.py` | Piper neural TTS |
 | `core/db.py` | SQLite history, cache, and macros |
 | `core/macro_manager.py` | Macro creation, storage, and replay |
-| `core/context.py` | System prompt + short-term memory |
-| `core/model_manager.py` | Model download and caching |
-| `ui/app.py` | PyQt6 floating overlay + system tray |
+| `core/model_manager.py` | Model download with Qt progress signals |
+| `core/settings.py` | Persistent settings (JSON, atomic writes) |
+| `core/system_monitor.py` | Real-time CPU/RAM/GPU gauges |
+| `ui/app.py` | PySide6 floating overlay + system tray |
+| `ui/dashboard.py` | Dashboard window + hotkey editor |
+| `ui/theme.py` | Golden-brown design system tokens + QSS |
+| `ui/widgets/` | GaugeWidget, ModelCard, StatCard components |

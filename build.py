@@ -1,6 +1,7 @@
 """
 Trixie — Professional Build Pipeline
 Produces a single-file Windows EXE via PyInstaller.
+The output EXE always supports both CPU-only and NVIDIA GPU environments.
 """
 import subprocess
 import sys
@@ -10,9 +11,9 @@ import shutil
 
 def _banner():
     print()
-    print("╔══════════════════════════════════════════╗")
-    print("║        Trixie — Build Pipeline           ║")
-    print("╚══════════════════════════════════════════╝")
+    print("╔══════════════════════════════════════════════════╗")
+    print("║         Trixie — Build Pipeline  v1.0           ║")
+    print("╚══════════════════════════════════════════════════╝")
     print()
 
 
@@ -89,21 +90,24 @@ def main():
     size_mb = os.path.getsize(exe_path) / (1024 * 1024)
 
     print()
-    print("=" * 50)
+    print("=" * 55)
     print("  🎉 Build complete!")
-    print("=" * 50)
-    print(f"  EXE:   {exe_path}")
-    print(f"  Size:  {size_mb:.1f} MB")
+    print("=" * 55)
+    print(f"  EXE:      {exe_path}")
+    print(f"  Size:     {size_mb:.1f} MB")
+    print(f"  Target:   CPU + NVIDIA GPU (universal)")
     print()
     print("  To run:")
     print("    dist\\Trixie.exe")
     print()
     print("  Notes:")
-    print("    • All Python dependencies are bundled inside the EXE")
+    print("    • All Python dependencies are bundled (including pynvml)")
+    print("    • The EXE runs on BOTH CPU-only and NVIDIA GPU systems")
+    print("    • GPU gauges show real-time stats on NVIDIA, N/A otherwise")
     print("    • AI models (~4 GB) download from HuggingFace on first launch")
     print("    • Models cached at: models/ (next to the EXE)")
     print("    • Settings stored at: %LOCALAPPDATA%/Trixie/settings.json")
-    print("=" * 50)
+    print("=" * 55)
     print()
 
 

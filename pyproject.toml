@@ -19,6 +19,7 @@ dependencies = [
     "onnxruntime",
     "psutil",
     "platformdirs",
+    "pynvml",
 ]
 
 [project.optional-dependencies]

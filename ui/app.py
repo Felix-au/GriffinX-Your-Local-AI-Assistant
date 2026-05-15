@@ -28,7 +28,7 @@ class OverlayWidget(QWidget):
         self.transcript_text = ""
         self.response_text = ""
         self.history_lines = []
-        self.is_ball_mode = False
+        self.is_ball_mode = True
         self.ball_size = 66  # 10% larger than original 60
         self.ball_x = 40
         self.ball_y = 10
@@ -54,6 +54,7 @@ class OverlayWidget(QWidget):
         if os.path.exists(ico_path):
             self.setWindowIcon(QIcon(ico_path))
         self.setFixedSize(340, 260)
+        self.setMouseTracking(True)
         
         # Load logo for expanded header
         self.logo_pixmap = None
@@ -86,9 +87,24 @@ class OverlayWidget(QWidget):
         self.response_timer.timeout.connect(self.clear_response)
         
         # Minimize button
-        self.btn_minimize = QPushButton("-", self)
-        self.btn_minimize.setGeometry(self.width() - 30, 8, 20, 20)
-        self.btn_minimize.setStyleSheet("background: transparent; color: white; font-size: 16px; font-weight: bold; border: none;")
+        self.btn_minimize = QPushButton("×", self)
+        self.btn_minimize.setGeometry(self.width() - 36, 8, 24, 24)
+        self.btn_minimize.setStyleSheet("""
+            QPushButton {
+                background: rgba(40, 30, 20, 200);
+                color: #F0C060;
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 12px;
+                border: 1px solid #5C4A30;
+                padding-bottom: 2px; /* Center the × vertically */
+            }
+            QPushButton:hover {
+                background: rgba(60, 50, 40, 220);
+                color: #FFE080;
+                border-color: #D4A044;
+            }
+        """)
         self.btn_minimize.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_minimize.clicked.connect(self.toggle_ball_mode)
         
@@ -110,6 +126,12 @@ class OverlayWidget(QWidget):
         self.text_input.setGeometry(16, self.height() - 36, self.width() - 32, 28)
         self.text_input.setStyleSheet("background: rgba(40, 40, 60, 180); color: white; border: 1px solid rgba(80, 80, 120, 150); border-radius: 14px; padding: 0 12px;")
         self.text_input.setPlaceholderText("Type a command and press Enter...")
+        
+        # Apply default ball mode layout
+        if self.is_ball_mode:
+            self.text_input.hide()
+            self.btn_minimize.hide()
+            self._update_ball_layout()
         
     def _update_ball_layout(self):
         if not self.is_ball_mode:
@@ -544,6 +566,18 @@ class OverlayWidget(QWidget):
             self.toggle_ball_text_input()
     
     def mouseMoveEvent(self, event):
+        # Update cursor when hovering over clickable areas
+        if not self.is_ball_mode and event.pos().y() < 40:
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        elif self.is_ball_mode:
+            bs = self.ball_size
+            if self.ball_x <= event.pos().x() <= self.ball_x + bs and self.ball_y <= event.pos().y() <= self.ball_y + bs:
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
+            else:
+                self.setCursor(Qt.CursorShape.ArrowCursor)
+        else:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+
         if self._drag_pos and event.buttons() & Qt.MouseButton.LeftButton:
             self.move(event.globalPosition().toPoint() - self._drag_pos)
             self._click_handled = True

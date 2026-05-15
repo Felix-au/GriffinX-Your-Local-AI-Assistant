@@ -17,7 +17,7 @@ class ModelDownloadSignals:
 
             class _Emitter(QObject):
                 download_started = Signal(str, str)    # (model_key, description)
-                download_progress = Signal(str, int, int)  # (model_key, downloaded, total)
+                download_progress = Signal(str, object, object)  # (model_key, downloaded_bytes, total_bytes)
                 download_finished = Signal(str, str)   # (model_key, path)
                 download_failed = Signal(str, str)     # (model_key, error)
                 model_already_present = Signal(str, str)  # (model_key, path)

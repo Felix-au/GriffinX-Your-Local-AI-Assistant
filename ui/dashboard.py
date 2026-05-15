@@ -27,12 +27,33 @@ class HotkeyEdit(QLineEdit):
 
     hotkey_changed = Signal(str)  # emits e.g. "ctrl+shift+t"
 
+    _STYLE_NORMAL = (
+        f"background: {COLORS['bg_input']}; color: {COLORS['text_primary']};"
+        f" border: 1px solid {COLORS['border']}; border-radius: 6px; padding: 4px 8px;"
+    )
+    _STYLE_ACTIVE = (
+        f"background: {COLORS['bg_card_hover']}; color: {COLORS['accent_gold']};"
+        f" border: 2px solid {COLORS['accent_gold']}; border-radius: 6px; padding: 4px 8px;"
+        f" font-weight: bold;"
+    )
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setReadOnly(True)
         self.setPlaceholderText("Click and press keys...")
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setStyleSheet(self._STYLE_NORMAL)
         self._keys = []
+
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        self.setStyleSheet(self._STYLE_ACTIVE)
+        self.setPlaceholderText("⌨ Press new hotkey combo...")
+
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        self.setStyleSheet(self._STYLE_NORMAL)
+        self.setPlaceholderText("Click and press keys...")
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -148,7 +169,7 @@ class DashboardWindow(QMainWindow):
 
         left.addWidget(model_box)
         left.addStretch()
-        root.addLayout(left, 3)
+        root.addLayout(left, 5)
 
         # ── Right column (activity log + settings) ─────────────
         right = QVBoxLayout()

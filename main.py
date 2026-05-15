@@ -369,7 +369,7 @@ class TrixieApp:
         if len(parts) >= 2:
             trigger_key = parts[-1]
             # Re-hook with new trigger key
-            keyboard.hook_key(trigger_key, self._hotkey_handler_factory(parts[:-1]), suppress=True)
+            keyboard.hook_key(trigger_key, self._hotkey_handler_factory(parts[:-1]), suppress=False)
         
         if self.dashboard:
             self.dashboard.update_status_bar(
@@ -463,7 +463,7 @@ class TrixieApp:
         parts = [p.strip().lower() for p in hotkey.split("+")]
         if len(parts) >= 2:
             trigger_key = parts[-1]
-            keyboard.hook_key(trigger_key, self._hotkey_handler_factory(parts[:-1]), suppress=True)
+            keyboard.hook_key(trigger_key, self._hotkey_handler_factory(parts[:-1]), suppress=False)
 
         # Start model download in background thread
         self._download_models_background()

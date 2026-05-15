@@ -41,19 +41,38 @@ class ModelCard(QWidget):
         top.addWidget(self.status_lbl)
         layout.addLayout(top)
 
-        # Progress bar (hidden by default)
+        # Progress bar (hidden by default) — tall enough to be visible
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
-        self.progress.setFixedHeight(8)
+        self.progress.setFixedHeight(16)
+        self.progress.setFormat("%p%")
+        self.progress.setStyleSheet(f"""
+            QProgressBar {{
+                background-color: {COLORS['gauge_track']};
+                border: 1px solid {COLORS['border']};
+                border-radius: 6px;
+                height: 16px;
+                text-align: center;
+                font-size: 9pt;
+                font-weight: bold;
+                color: {COLORS['text_primary']};
+            }}
+            QProgressBar::chunk {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 {COLORS['accent_amber']}, stop:1 {COLORS['accent_gold']});
+                border-radius: 5px;
+            }}
+        """)
         self.progress.hide()
         layout.addWidget(self.progress)
 
-        # Bottom row: size label
-        self.size_lbl = QLabel(size_label)
+        # Status text line (hidden by default — only shown for errors)
+        self.size_lbl = QLabel("")
         self.size_lbl.setFont(QFont(FONTS["family"], FONTS["size_xs"]))
         self.size_lbl.setStyleSheet(f"color: {COLORS['text_muted']};")
         self.size_lbl.setWordWrap(True)
+        self.size_lbl.hide()
         layout.addWidget(self.size_lbl)
 
     # ── Public API ─────────────────────────────────────────────
@@ -61,20 +80,21 @@ class ModelCard(QWidget):
         self._status = "ready"
         self.status_lbl.setText("✅")
         self.progress.hide()
-        if path:
-            self.size_lbl.setText(f"✅ {path}")
+        self.size_lbl.hide()
 
     def set_downloading(self, percent: int):
         self._status = "downloading"
         self.status_lbl.setText(f"⏳ {percent}%")
         self.progress.show()
         self.progress.setValue(percent)
+        self.size_lbl.hide()
 
     def set_missing(self):
         self._status = "missing"
         self.status_lbl.setText("❌")
         self.progress.hide()
         self.size_lbl.setText("Not downloaded")
+        self.size_lbl.show()
 
     def set_failed(self, error: str = ""):
         self._status = "failed"
@@ -82,7 +102,7 @@ class ModelCard(QWidget):
         self.progress.hide()
         self.size_lbl.setText(f"Failed: {error[:40]}" if error else "Download failed")
         self.size_lbl.setStyleSheet(f"color: {COLORS['error']};")
-
+        self.size_lbl.show()
     # ── Paint ──────────────────────────────────────────────────
     def paintEvent(self, event):
         p = QPainter(self)

@@ -4,6 +4,13 @@ import json
 import threading
 import keyboard
 import os
+import ctypes
+
+# Tell Windows taskbar to use Trixie's icon instead of Python's
+try:
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Trixie.LocalAI.1.0")
+except Exception:
+    pass
 
 from core.db import DBManager
 from core.context import ContextManager

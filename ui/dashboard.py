@@ -94,7 +94,22 @@ class DashboardWindow(QMainWindow):
         super().__init__(parent)
         self.setWindowTitle(f"Trixie: Your Local AI Assistant  —  v{version}")
         self.setMinimumSize(820, 520)
-        self.resize(900, 580)
+
+        # Launch at 80% of screen size
+        from PySide6.QtWidgets import QApplication
+        screen = QApplication.primaryScreen()
+        if screen:
+            geom = screen.availableGeometry()
+            w = int(geom.width() * 0.7)
+            h = int(geom.height() * 0.8)
+            self.resize(w, h)
+            # Center on screen
+            self.move(
+                geom.x() + (geom.width() - w) // 2,
+                geom.y() + (geom.height() - h) // 2
+            )
+        else:
+            self.resize(1200, 780)
 
         self._version = version
         self._log_count = 0
@@ -160,9 +175,9 @@ class DashboardWindow(QMainWindow):
         model_layout = QHBoxLayout(model_box)
         model_layout.setSpacing(10)
 
-        self.card_stt = ModelCard("🎙️", "STT — Whisper", "~1.5 GB")
-        self.card_llm = ModelCard("🧠", "LLM — Qwen 3 4B", "~2.5 GB")
-        self.card_tts = ModelCard("🔊", "TTS — Piper", "~15 MB")
+        self.card_stt = ModelCard("🎙️", "STT — Whisper")
+        self.card_llm = ModelCard("🧠", "LLM — Qwen 3 4B")
+        self.card_tts = ModelCard("🔊", "TTS — Piper")
 
         for c in (self.card_stt, self.card_llm, self.card_tts):
             model_layout.addWidget(c)

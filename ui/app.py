@@ -71,10 +71,10 @@ class OverlayWidget(QWidget):
         # Dragging state
         self._drag_pos = None
         
-        # Click disambiguation timer
+        # Click disambiguation timer — fires toggle_ball_text_input after 300ms delay
         self._click_timer = QTimer(self)
         self._click_timer.setSingleShot(True)
-        self._click_timer.timeout.connect(self.toggle_cb)
+        self._click_timer.timeout.connect(self.toggle_ball_text_input)
         
         # Pulse animation timer
         self.pulse_timer = QTimer(self)
@@ -203,14 +203,16 @@ class OverlayWidget(QWidget):
             self.setMinimumSize(340, 260)
             self.setMaximumSize(340, 260)
             self.setGeometry(old_pos.x(), old_pos.y(), 340, 260)
+            # Always reposition text input at correct bottom location
+            self.text_input.setGeometry(16, 260 - 36, 340 - 32, 28)
             self.text_input.show()
             self.btn_minimize.show()
-            # Buttons go at the bottom of the window, centred, not in header
+            # Feedback buttons centred above text input
             btn_w, btn_h = 44, 44
             gap = 12
             total = btn_w * 2 + gap
             bx = (340 - total) // 2
-            by = 260 - btn_h - 36 - 8  # above text input
+            by = 260 - btn_h - 36 - 8
             self.btn_up.setGeometry(bx, by, btn_w, btn_h)
             self.btn_down.setGeometry(bx + btn_w + gap, by, btn_w, btn_h)
         self.setUpdatesEnabled(True)
@@ -638,15 +640,16 @@ class OverlayWidget(QWidget):
                 elif self.is_ball_mode:
                     bs = self.ball_size
                     if self.ball_x <= event.pos().x() <= self.ball_x + bs and self.ball_y <= event.pos().y() <= self.ball_y + bs:
-                        self.toggle_ball_text_input()
+                        # Delay single-click to avoid accidental triggers before a double-click
+                        self._click_timer.start(300)
             self._drag_pos = None
             
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.is_ball_mode:
             bs = self.ball_size
             if self.ball_x <= event.pos().x() <= self.ball_x + bs and self.ball_y <= event.pos().y() <= self.ball_y + bs:
-                self._click_timer.stop()
-                self.toggle_ball_mode()
+                self._click_timer.stop()  # cancel pending single-click action
+                self.toggle_ball_mode()  # expand to translucent window
 
 
 class UIEngine(QObject):

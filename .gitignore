@@ -13,7 +13,6 @@ build/
 venv/
 .venv/
 env/
-uv.lock
 
 # ── AI Model Weights (large binaries) ──────────────
 models/*.gguf

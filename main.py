@@ -112,6 +112,17 @@ class TrixieApp:
             ensure_model("tts_config", signals=signals)
             tts_model_path = ensure_model("tts_model", signals=signals)
 
+            # STT — Whisper (check existence; download if missing)
+            self._log_activity("🔍 Checking STT model...")
+            whisper_path = self.config.get("model_paths", {}).get("whisper", "models/faster-whisper-medium.en")
+            import os as _os
+            whisper_ready = _os.path.isdir(whisper_path) and _os.path.exists(_os.path.join(whisper_path, "model.bin"))
+            if not whisper_ready:
+                # Emit downloading state on the STT card
+                if self.dashboard:
+                    self.dashboard.card_stt.set_downloading(0)
+                ensure_model("stt", signals=signals)
+
             # LLM
             self._log_activity("🔍 Checking LLM model...")
             llm_path = self.config.get("model_paths", {}).get("llm", "models/Qwen_Qwen3-4B-Q4_K_M.gguf")
@@ -129,8 +140,13 @@ class TrixieApp:
                     device=self.config.get("whisper_device", "auto"),
                     compute_type=self.config.get("whisper_compute_type", "default")
                 )
-                # Mark STT as ready once AudioEngine initializes
-                self.dashboard.card_stt.set_ready("Whisper loaded")
+                # Re-check whisper path after potential download
+                whisper_path = self.config.get("model_paths", {}).get("whisper", "models/faster-whisper-medium.en")
+                whisper_ready = os.path.isdir(whisper_path) and os.path.exists(os.path.join(whisper_path, "model.bin"))
+                if whisper_ready:
+                    self.dashboard.card_stt.set_ready(whisper_path)
+                else:
+                    self.dashboard.card_stt.set_failed("Model not yet downloaded — speak a command to trigger download")
                 self._log_activity("✅ STT engine ready")
             except Exception as e:
                 logger.error(f"STT init failed: {e}")
@@ -161,6 +177,7 @@ class TrixieApp:
 
         thread = threading.Thread(target=_worker, daemon=True)
         thread.start()
+
 
     def _card_for_key(self, key):
         """Map model registry key to dashboard card."""

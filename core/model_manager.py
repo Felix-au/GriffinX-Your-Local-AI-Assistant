@@ -1,10 +1,30 @@
 import os
+import io
 import logging
 import urllib.request
 import sys
+import contextlib
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_print(*args, **kwargs):
+    """Print only when stdout is available (no-op in windowed EXE)."""
+    if sys.stdout is not None:
+        print(*args, **kwargs)
+
+
+@contextlib.contextmanager
+def _stdout_guard():
+    """Replace None stdout with a dummy stream for libs (e.g. tqdm) that assume stdout exists."""
+    _orig = sys.stdout
+    if sys.stdout is None:
+        sys.stdout = io.StringIO()
+    try:
+        yield
+    finally:
+        sys.stdout = _orig
 
 
 class ModelDownloadSignals:
@@ -61,6 +81,9 @@ MODEL_REGISTRY = {
 }
 
 def _progress_hook(downloaded, total_size):
+    # sys.stdout is None in windowed EXE (console=False) — guard against it
+    if sys.stdout is None:
+        return
     if total_size > 0:
         pct = downloaded * 100 / total_size
         filled = int(30 * downloaded / total_size)
@@ -82,10 +105,10 @@ def download_model(model_key, models_dir="models", signals=None):
             signals.model_already_present.emit(model_key, dest)
         return dest
     os.makedirs(models_dir, exist_ok=True)
-    print(f"\n{'='*60}")
-    print(f"  Downloading: {info['description']}")
-    print(f"  Size: {info['size_label']}")
-    print(f"{'='*60}")
+    _safe_print(f"\n{'='*60}")
+    _safe_print(f"  Downloading: {info['description']}")
+    _safe_print(f"  Size: {info['size_label']}")
+    _safe_print(f"{'='*60}")
     if signals and hasattr(signals, 'download_started'):
         signals.download_started.emit(model_key, info['description'])
     req = urllib.request.Request(info["url"], headers={"User-Agent": "Mozilla/5.0"})
@@ -103,7 +126,7 @@ def download_model(model_key, models_dir="models", signals=None):
                 if signals and hasattr(signals, 'download_progress'):
                     signals.download_progress.emit(model_key, downloaded, total)
         os.rename(dest + ".tmp", dest)
-        print(f"\n  [OK] Downloaded: {dest}\n")
+        _safe_print(f"\n  [OK] Downloaded: {dest}\n")
         if signals and hasattr(signals, 'download_finished'):
             signals.download_finished.emit(model_key, dest)
         return dest
@@ -112,7 +135,7 @@ def download_model(model_key, models_dir="models", signals=None):
         tmp = dest + ".tmp"
         if os.path.exists(tmp):
             os.remove(tmp)
-        print(f"\n  [FAILED] Failed: {e}\n")
+        _safe_print(f"\n  [FAILED] Failed: {e}\n")
         if signals and hasattr(signals, 'download_failed'):
             signals.download_failed.emit(model_key, str(e))
         return None
@@ -127,11 +150,11 @@ def download_huggingface_snapshot(model_key, models_dir="models", signals=None):
             signals.model_already_present.emit(model_key, str(dest))
         return str(dest)
 
-    print(f"\n{'='*60}")
-    print(f"  Downloading: {info['description']}")
-    print(f"  Size: {info['size_label']}")
-    print(f"  Destination: {dest}")
-    print(f"{'='*60}")
+    _safe_print(f"\n{'='*60}")
+    _safe_print(f"  Downloading: {info['description']}")
+    _safe_print(f"  Size: {info['size_label']}")
+    _safe_print(f"  Destination: {dest}")
+    _safe_print(f"{'='*60}")
     if signals and hasattr(signals, 'download_started'):
         signals.download_started.emit(model_key, info['description'])
 
@@ -139,19 +162,20 @@ def download_huggingface_snapshot(model_key, models_dir="models", signals=None):
         from huggingface_hub import snapshot_download
 
         dest.mkdir(parents=True, exist_ok=True)
-        path = snapshot_download(
-            repo_id=info["repo_id"],
-            local_dir=dest,
-            allow_patterns=info.get("allow_patterns"),
-            max_workers=4,
-        )
-        print(f"\n  [OK] Downloaded: {path}\n")
+        with _stdout_guard():
+            path = snapshot_download(
+                repo_id=info["repo_id"],
+                local_dir=dest,
+                allow_patterns=info.get("allow_patterns"),
+                max_workers=4,
+            )
+        _safe_print(f"\n  [OK] Downloaded: {path}\n")
         if signals and hasattr(signals, 'download_finished'):
             signals.download_finished.emit(model_key, str(path))
         return str(path)
     except Exception as e:
         logger.error(f"Hugging Face snapshot download failed: {e}")
-        print(f"\n  [FAILED] Failed: {e}\n")
+        _safe_print(f"\n  [FAILED] Failed: {e}\n")
         if signals and hasattr(signals, 'download_failed'):
             signals.download_failed.emit(model_key, str(e))
         return None

@@ -29,7 +29,13 @@ from ui.theme import get_global_stylesheet
 # Suppress HF symlink warnings on Windows
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(name)s - %(message)s')
+# In windowed EXE (console=False), sys.stderr is None — guard logging before basicConfig crashes
+import sys as _sys
+if _sys.stderr is None:
+    import logging as _logging
+    _logging.basicConfig(handlers=[_logging.NullHandler()], level=_logging.INFO)
+else:
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(name)s - %(message)s')
 logger = logging.getLogger("main")
 
 class TrixieApp:

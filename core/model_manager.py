@@ -17,14 +17,20 @@ def _safe_print(*args, **kwargs):
 
 @contextlib.contextmanager
 def _stdout_guard():
-    """Replace None stdout with a dummy stream for libs (e.g. tqdm) that assume stdout exists."""
-    _orig = sys.stdout
+    """Replace None stdout/stderr with dummy streams for libs (e.g. tqdm/hf_hub) that assume they exist.
+    In windowed EXE (console=False), both sys.stdout and sys.stderr are None.
+    """
+    _orig_out = sys.stdout
+    _orig_err = sys.stderr
     if sys.stdout is None:
         sys.stdout = io.StringIO()
+    if sys.stderr is None:
+        sys.stderr = io.StringIO()
     try:
         yield
     finally:
-        sys.stdout = _orig
+        sys.stdout = _orig_out
+        sys.stderr = _orig_err
 
 
 class ModelDownloadSignals:

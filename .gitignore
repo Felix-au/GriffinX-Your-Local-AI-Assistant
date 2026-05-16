@@ -26,6 +26,7 @@ scratch/
 
 # ── Logs & Database ────────────────────────────────
 logs/
+*.log
 *.db
 *.db-journal
 

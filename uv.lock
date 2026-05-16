@@ -289,6 +289,62 @@ wheels = [
 ]
 
 [[package]]
+name = "griffinx"
+version = "1.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "faster-whisper" },
+    { name = "huggingface-hub" },
+    { name = "keyboard" },
+    { name = "llama-cpp-python" },
+    { name = "mss" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "onnxruntime", version = "1.24.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "onnxruntime", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pillow" },
+    { name = "piper-tts" },
+    { name = "platformdirs" },
+    { name = "psutil" },
+    { name = "pyautogui" },
+    { name = "pynvml" },
+    { name = "pyside6" },
+    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "sounddevice" },
+]
+
+[package.optional-dependencies]
+build = [
+    { name = "pyinstaller" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "faster-whisper" },
+    { name = "huggingface-hub" },
+    { name = "keyboard" },
+    { name = "llama-cpp-python" },
+    { name = "mss" },
+    { name = "numpy" },
+    { name = "onnxruntime" },
+    { name = "pillow" },
+    { name = "piper-tts" },
+    { name = "platformdirs" },
+    { name = "psutil" },
+    { name = "pyautogui" },
+    { name = "pyinstaller", marker = "extra == 'build'" },
+    { name = "pynvml" },
+    { name = "pyside6", specifier = ">=6.6" },
+    { name = "scipy" },
+    { name = "sounddevice" },
+]
+provides-extras = ["build"]
+
+[package.metadata.requires-dev]
+dev = []
+
+[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4452,62 +4508,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/09/a9/6ba95a270c6f1fbcd
 wheels = [
     { url = "https://files.pythonhosted.org/packages/16/e1/3079a9ff9b8e11b846c6ac5c8b5bfb7ff225eee721825310c91b3b50304f/tqdm-4.67.3-py3-none-any.whl", hash = "sha256:ee1e4c0e59148062281c49d80b25b67771a127c85fc9676d3be5f243206826bf", size = 78374, upload-time = "2026-02-03T17:35:50.982Z" },
 ]
-
-[[package]]
-name = "trixie"
-version = "1.0.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "faster-whisper" },
-    { name = "huggingface-hub" },
-    { name = "keyboard" },
-    { name = "llama-cpp-python" },
-    { name = "mss" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "onnxruntime", version = "1.24.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "onnxruntime", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "pillow" },
-    { name = "piper-tts" },
-    { name = "platformdirs" },
-    { name = "psutil" },
-    { name = "pyautogui" },
-    { name = "pynvml" },
-    { name = "pyside6" },
-    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "sounddevice" },
-]
-
-[package.optional-dependencies]
-build = [
-    { name = "pyinstaller" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "faster-whisper" },
-    { name = "huggingface-hub" },
-    { name = "keyboard" },
-    { name = "llama-cpp-python" },
-    { name = "mss" },
-    { name = "numpy" },
-    { name = "onnxruntime" },
-    { name = "pillow" },
-    { name = "piper-tts" },
-    { name = "platformdirs" },
-    { name = "psutil" },
-    { name = "pyautogui" },
-    { name = "pyinstaller", marker = "extra == 'build'" },
-    { name = "pynvml" },
-    { name = "pyside6", specifier = ">=6.6" },
-    { name = "scipy" },
-    { name = "sounddevice" },
-]
-provides-extras = ["build"]
-
-[package.metadata.requires-dev]
-dev = []
 
 [[package]]
 name = "typer"

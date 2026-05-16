@@ -286,7 +286,7 @@ uv run python download_models.py
 ```powershell
 # 1. Clone the repository
 git clone https://github.com/Felix-au/GriffinX-Your-Local-AI-Assistant.git
-cd Trixie-Your-Local-AI-Assistant
+cd GriffinX-Your-Local-AI-Assistant
 
 # 2. Install dependencies
 uv sync

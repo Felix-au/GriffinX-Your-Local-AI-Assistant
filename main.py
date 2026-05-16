@@ -10,7 +10,7 @@ import ctypes
 def _setup_logging():
     """
     In frozen EXE (console=False), stdout/stderr are None.
-    Redirect all output to trixie.log next to the EXE so you get the full
+    Redirect all output to griffinx.log next to the EXE so you get the full
     terminal equivalent while debugging a packaged build.
     In dev mode (uv run python main.py), normal terminal output is preserved.
     """
@@ -22,7 +22,7 @@ def _setup_logging():
     else:
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    log_path = os.path.join(base_dir, "trixie.log")
+    log_path = os.path.join(base_dir, "griffinx.log")
 
     # Rotating file handler — max 5 MB, keep 3 backups
     file_handler = logging.handlers.RotatingFileHandler(
@@ -78,9 +78,9 @@ _log_path = _setup_logging()
 
 import keyboard
 
-# Tell Windows taskbar to use Trixie's icon instead of Python's
+# Tell Windows taskbar to use GriffinX's icon instead of Python's
 try:
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Trixie.LocalAI.1.0")
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("GriffinX.LocalAI.1.0")
 except Exception:
     pass
 
@@ -102,10 +102,10 @@ from ui.app import UIEngine
 from ui.theme import get_global_stylesheet
 
 logger = logging.getLogger("main")
-logger.info(f"Trixie starting — log file: {_log_path}")
+logger.info(f"GriffinX starting — log file: {_log_path}")
 
 
-class TrixieApp:
+class GriffinXApp:
     def __init__(self):
         if os.path.exists("config.json"):
             with open("config.json", "r") as f:
@@ -253,7 +253,7 @@ class TrixieApp:
             self._log_activity("🚀 All engines initialized")
             if self.dashboard:
                 self.dashboard.update_status_bar(
-                    f"Trixie is ready  •  Push-to-talk: {self._current_hotkey}"
+                    f"GriffinX is ready  •  Push-to-talk: {self._current_hotkey}"
                 )
 
         thread = threading.Thread(target=_worker, daemon=True)
@@ -441,7 +441,7 @@ class TrixieApp:
             self.start_listening()
 
     def quit(self):
-        logger.info("Quitting Trixie...")
+        logger.info("Quitting GriffinX...")
         if self.system_monitor:
             self.system_monitor.stop()
         keyboard.unhook_all()
@@ -478,7 +478,7 @@ class TrixieApp:
         
         if self.dashboard:
             self.dashboard.update_status_bar(
-                f"Trixie is ready  •  Push-to-talk: {new_combo}"
+                f"GriffinX is ready  •  Push-to-talk: {new_combo}"
             )
 
     def _hotkey_handler_factory(self, modifiers):
@@ -507,7 +507,7 @@ class TrixieApp:
 
     def run(self):
         """Start the keyboard listener and UI."""
-        logger.info("Trixie is starting...")
+        logger.info("GriffinX is starting...")
 
         self.ui = UIEngine(
             toggle_listening_callback=self.toggle_listening,
@@ -554,7 +554,7 @@ class TrixieApp:
 
         # ── Show dashboard FIRST, then download models in background ──
         self.dashboard.show()
-        self._log_activity("🚀 Trixie started — downloading models...")
+        self._log_activity("🚀 GriffinX started — downloading models...")
         self.dashboard.update_status_bar("Initializing — downloading models...")
 
         # Register initial hotkey
@@ -570,5 +570,5 @@ class TrixieApp:
         self.ui.run()
 
 if __name__ == "__main__":
-    app = TrixieApp()
+    app = GriffinXApp()
     app.run()

@@ -1,1 +1,1 @@
-# Trixie Core Package
+# GriffinX Core Package

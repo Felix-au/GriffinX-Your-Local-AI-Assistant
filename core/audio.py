@@ -10,9 +10,9 @@ from core.model_manager import ensure_model
 DEFAULT_STT_MODEL = "models/faster-whisper-medium.en"
 FALLBACK_STT_MODEL = "Systran/faster-whisper-medium.en"
 COMMAND_TRANSCRIPTION_PROMPT = (
-    "Trixie voice commands and app names: open Chrome, open Notepad, open File Explorer, "
+    "GriffinX voice commands and app names: open Chrome, open Notepad, open File Explorer, "
     "close Chrome, close Notepad, run, type hello world, press enter, shutdown, shut down, "
-    "cancel, stop, hello, Trixie."
+    "cancel, stop, hello, GriffinX."
 )
 
 class AudioEngine:

@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="assets/trixie.jpeg" width="150" alt="Trixie Logo"/>
+  <img src="assets/trixie.jpeg" width="150" alt="GriffinX Logo"/>
 </p>
-<h1 align="center">Trixie: Your Local AI Assistant</h1>
+<h1 align="center">GriffinX: Your Local AI Assistant</h1>
 <p align="center">
   <strong>Voice-controlled desktop assistant that runs entirely on your machine</strong><br/>
-  <em>Hold a hotkey → speak naturally → Trixie transcribes, thinks, acts, and speaks back — all offline</em>
+  <em>Hold a hotkey → speak naturally → GriffinX transcribes, thinks, acts, and speaks back — all offline</em>
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
-- [Why Trixie?](#-why-trixie)
+- [Why GriffinX?](#-why-griffinx)
 - [Features](#-features)
 - [Architecture](#-architecture)
 - [Pipeline Flow](#-pipeline-flow)
@@ -39,21 +39,21 @@
 
 ## 🔍 Overview
 
-**Trixie** is a Windows desktop assistant that lets you control your PC with your voice while keeping all inference local. It listens through push-to-talk, transcribes speech with a local Whisper model, classifies your intent with a local Qwen 3 4B LLM running via `llama.cpp`, executes desktop actions (open/close apps, type text, press hotkeys, run macros), learns from your feedback, and speaks back using offline Piper neural text-to-speech.
+**GriffinX** is a Windows desktop assistant that lets you control your PC with your voice while keeping all inference local. It listens through push-to-talk, transcribes speech with a local Whisper model, classifies your intent with a local Qwen 3 4B LLM running via `llama.cpp`, executes desktop actions (open/close apps, type text, press hotkeys, run macros), learns from your feedback, and speaks back using offline Piper neural text-to-speech.
 
 No cloud is required for normal use. Model files (~4 GB total) are downloaded on first run and then loaded from the local `models/` folder.
 
-> Trixie is **CPU-first by design**. A GPU is optional — it accelerates inference but is never required. The built EXE runs on **both CPU-only and NVIDIA GPU** systems without modification. The app runs on any Windows 10/11 machine with 16 GB RAM.
+> GriffinX is **CPU-first by design**. A GPU is optional — it accelerates inference but is never required. The built EXE runs on **both CPU-only and NVIDIA GPU** systems without modification. The app runs on any Windows 10/11 machine with 16 GB RAM.
 
 ---
 
-## 🎯 Why Trixie?
+## 🎯 Why GriffinX?
 
-> **Most AI assistants either live in a browser or depend on cloud APIs. Trixie gives you direct desktop control — offline.**
+> **Most AI assistants either live in a browser or depend on cloud APIs. GriffinX gives you direct desktop control — offline.**
 
-| | Cloud AI Assistants | Trixie |
+| | Cloud AI Assistants | GriffinX |
 |---|---|---|
-| **Workflow** | Open browser → type prompt → wait → copy result | Hold hotkey → speak → Trixie acts immediately |
+| **Workflow** | Open browser → type prompt → wait → copy result | Hold hotkey → speak → GriffinX acts immediately |
 | **Privacy** | Voice and commands sent to cloud servers | Everything stays on your machine — STT, LLM, TTS, history |
 | **Desktop Control** | Text-only responses, no system actions | Opens/closes apps, types text, presses hotkeys, runs macros |
 | **Learning** | Stateless — no memory of your habits | Intent cache learns from feedback — repeated commands skip LLM |
@@ -132,7 +132,7 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 ### 🖥️ Floating Overlay & Ball Mode
 | Feature | Description |
 |---|---|
-| **Ball Mode Default** | Trixie starts as a compact branded ball — single-click opens text input, double-click expands |
+| **Ball Mode Default** | GriffinX starts as a compact branded ball — single-click opens text input, double-click expands |
 | **Right-Click Menu** | Context menu on the ball: Open Dashboard / Quit |
 | **Expanded Overlay** | Translucent glassmorphic panel with status, transcript, and response |
 | **Logo Click** | Click the header logo in expanded mode → opens Dashboard (hand cursor) |
@@ -148,7 +148,7 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                      Trixie Desktop App                              │
+│                      GriffinX Desktop App                              │
 │                                                                      │
 │  ┌────────────────┐    ┌──────────────────────────────────────────┐  │
 │  │   Keyboard     │    │        UI Layer (PySide6)                │  │
@@ -247,7 +247,7 @@ Interaction logged to SQLite (timestamp, input, intent, status, feedback)
 
 ## 🧪 Model Pipeline
 
-Trixie ships without large model files. On first use it downloads three models with live progress in the Dashboard:
+GriffinX ships without large model files. On first use it downloads three models with live progress in the Dashboard:
 
 | Model | Engine | Size | Purpose | Local Path |
 |---|---|---|---|---|
@@ -285,7 +285,7 @@ uv run python download_models.py
 
 ```powershell
 # 1. Clone the repository
-git clone https://github.com/Felix-au/Trixie-Your-Local-AI-Assistant.git
+git clone https://github.com/Felix-au/GriffinX-Your-Local-AI-Assistant.git
 cd Trixie-Your-Local-AI-Assistant
 
 # 2. Install dependencies
@@ -294,7 +294,7 @@ uv sync
 # 3. (Optional) Pre-download models
 uv run python download_models.py
 
-# 4. Run Trixie
+# 4. Run GriffinX
 uv run python main.py
 ```
 
@@ -307,9 +307,9 @@ On first launch:
 
 ### Use It
 
-1. **Hold your push-to-talk hotkey** (default: `Ctrl + CapsLock`) — Trixie starts listening (green pulse)
+1. **Hold your push-to-talk hotkey** (default: `Ctrl + CapsLock`) — GriffinX starts listening (green pulse)
 2. **Speak a command** — e.g., "Open Chrome", "Type hello world", "Press ctrl+s"
-3. **Release the hotkey** — Trixie transcribes, classifies intent, and executes
+3. **Release the hotkey** — GriffinX transcribes, classifies intent, and executes
 4. **Confirm with 👍/👎** — positive feedback caches the command for instant future use
 5. **Or type** — left-click the ball or use the text input in the expanded overlay
 
@@ -346,7 +346,7 @@ Output:
 
 ```
 dist/
-└── Trixie.exe      # Single-file executable (windowed, no console)
+└── GriffinX.exe      # Single-file executable (windowed, no console)
                      # Python runtime + all deps bundled via PyInstaller
 ```
 
@@ -373,14 +373,14 @@ The built executable runs on **both CPU-only and NVIDIA GPU** environments witho
 
 > **Why not bundle the models?** The models total ~4 GB — bundling would create an impractically large executable. Instead, they download once on first launch and are cached permanently in `models/`.
 
-For offline distribution, ship the populated `models/` folder beside `Trixie.exe`.
+For offline distribution, ship the populated `models/` folder beside `GriffinX.exe`.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-Trixie/
+GriffinX/
 ├── main.py                      # App entry point — orchestrator + background model downloads
 ├── config.json                  # Runtime configuration (model paths, Whisper settings)
 ├── build.py                     # PyInstaller build pipeline (CPU + GPU compatible)
@@ -422,7 +422,7 @@ Trixie/
 ├── models/                      # Runtime model storage (auto-populated, gitignored)
 ├── logs/                        # SQLite database storage (gitignored)
 │
-├── Trixie.md                    # Detailed user guide with worked examples
+├── GriffinX.md                    # Detailed user guide with worked examples
 ├── guide.md                     # Quick-start guide
 ├── README.md                    # This file
 ├── LICENSE                      # MIT License
@@ -468,7 +468,7 @@ All runtime configuration lives in [`config.json`](config.json):
 | `whisper_compute_type` | `default` | STT precision: `default`, `float16`, or `int8` |
 | `cache_threshold` | `0.80` | Fuzzy-match threshold for intent cache (0.0–1.0) |
 
-### Dashboard Settings (`%LOCALAPPDATA%/Trixie/settings.json`)
+### Dashboard Settings (`%LOCALAPPDATA%/GriffinX/settings.json`)
 
 | Key | Default | Description |
 |---|---|---|
@@ -491,14 +491,14 @@ All runtime configuration lives in [`config.json`](config.json):
 | Feature | Description | Status |
 |---|---|---|
 | **Macro Manager UI** | Dashboard section below AI Models where users can register, name, edit, and delete macros — then trigger them by voice | 🔜 Next |
-| **Voice Responses** | When a general query is answered, Trixie speaks the response aloud via Piper TTS (toggle on/off in Dashboard settings) | 🔜 Next |
-| **Text Narration** | Select/highlight text anywhere, then click the Trixie ball — Trixie reads the selected text aloud | 🔜 Next |
+| **Voice Responses** | When a general query is answered, GriffinX speaks the response aloud via Piper TTS (toggle on/off in Dashboard settings) | 🔜 Next |
+| **Text Narration** | Select/highlight text anywhere, then click the GriffinX ball — GriffinX reads the selected text aloud | 🔜 Next |
 
 ### Improvement Ideas
 
 #### High Impact
 - **Conversation Mode** — Multi-turn dialogue for complex queries instead of single-shot intent classification
-- **Custom Wake Word** — Always-on listening with a wake word (e.g., "Hey Trixie") instead of push-to-talk
+- **Custom Wake Word** — Always-on listening with a wake word (e.g., "Hey GriffinX") instead of push-to-talk
 - **Plugin System** — Let users add custom intents and executors without modifying core code
 - **Cross-Platform** — Port to macOS (Core Audio) and Linux (PulseAudio)
 

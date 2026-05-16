@@ -1,5 +1,5 @@
 """
-Trixie — Professional Build Pipeline
+GriffinX — Professional Build Pipeline
 Produces a single-file Windows EXE via PyInstaller.
 The output EXE always supports both CPU-only and NVIDIA GPU environments.
 """
@@ -12,7 +12,7 @@ import shutil
 def _banner():
     print()
     print("╔══════════════════════════════════════════════════╗")
-    print("║         Trixie — Build Pipeline  v1.0            ║")
+    print("║       GriffinX — Build Pipeline  v1.0            ║")
     print("╚══════════════════════════════════════════════════╝")
     print()
 
@@ -83,7 +83,7 @@ def main():
     _ok("PyInstaller build complete")
 
     # ── Summary ──────────────────────────────────────────────
-    exe_path = os.path.join("dist", "Trixie.exe")
+    exe_path = os.path.join("dist", "GriffinX.exe")
     if not os.path.exists(exe_path):
         _fail(f"Expected {exe_path} not found")
 
@@ -98,7 +98,7 @@ def main():
     print(f"  Target:   CPU + NVIDIA GPU (universal)")
     print()
     print("  To run:")
-    print("    dist\\Trixie.exe")
+    print("    dist\\GriffinX.exe")
     print()
     print("  Notes:")
     print("    • All Python dependencies are bundled (including pynvml)")
@@ -106,7 +106,7 @@ def main():
     print("    • GPU gauges show real-time stats on NVIDIA, N/A otherwise")
     print("    • AI models (~4 GB) download from HuggingFace on first launch")
     print("    • Models cached at: models/ (next to the EXE)")
-    print("    • Settings stored at: %LOCALAPPDATA%/Trixie/settings.json")
+    print("    • Settings stored at: %LOCALAPPDATA%/GriffinX/settings.json")
     print("=" * 55)
     print()
 

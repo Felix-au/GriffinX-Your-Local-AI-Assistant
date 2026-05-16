@@ -1,6 +1,6 @@
-# Trixie: Your Local AI Assistant — User Guide
+# GriffinX: Your Local AI Assistant — User Guide
 
-> **Trixie** is an AI-powered desktop assistant that lives in your system tray and listens when you ask it to. Hold a hotkey, speak a command, and Trixie transcribes your speech, classifies the intent, executes the action, learns from your feedback, and speaks the result back — all using models running **entirely on your device**. No cloud. No API keys. No data leaves your machine.
+> **GriffinX** is an AI-powered desktop assistant that lives in your system tray and listens when you ask it to. Hold a hotkey, speak a command, and GriffinX transcribes your speech, classifies the intent, executes the action, learns from your feedback, and speaks the result back — all using models running **entirely on your device**. No cloud. No API keys. No data leaves your machine.
 
 ---
 
@@ -17,7 +17,7 @@
 9. [Example 4 — Creating and Running a Macro](#example-4--creating-and-running-a-macro)
 10. [Example 5 — General Knowledge Question](#example-5--general-knowledge-question)
 11. [Example 6 — Closing an Application](#example-6--closing-an-application)
-12. [The Intent Cache — How Trixie Learns](#the-intent-cache--how-trixie-learns)
+12. [The Intent Cache — How GriffinX Learns](#the-intent-cache--how-griffinx-learns)
 13. [UI Guide — Dashboard](#ui-guide--dashboard)
 14. [UI Guide — Ball Mode (Default)](#ui-guide--ball-mode-default)
 15. [UI Guide — Expanded Overlay](#ui-guide--expanded-overlay)
@@ -50,11 +50,11 @@
 
 **In plain English:**
 
-1. **You hold the hotkey and speak** — `Ctrl + CapsLock`. Trixie records from your default microphone at 16 kHz mono.
+1. **You hold the hotkey and speak** — `Ctrl + CapsLock`. GriffinX records from your default microphone at 16 kHz mono.
 2. **You release the key** — Recording stops. The audio is sent to the local Faster-Whisper model for transcription. A command vocabulary prompt biases recognition toward app names and common actions.
-3. **The transcript goes to the intent engine** — First, Trixie checks the intent cache for a fuzzy match (≥80% similarity). If found, it skips the LLM entirely and executes instantly. If not, the Qwen 3 4B model classifies the command into a structured JSON intent.
-4. **Trixie executes the action** — Opens an app, types text, presses a hotkey, runs a macro, or answers a question.
-5. **Trixie speaks the result** — Using offline Piper neural TTS.
+3. **The transcript goes to the intent engine** — First, GriffinX checks the intent cache for a fuzzy match (≥80% similarity). If found, it skips the LLM entirely and executes instantly. If not, the Qwen 3 4B model classifies the command into a structured JSON intent.
+4. **GriffinX executes the action** — Opens an app, types text, presses a hotkey, runs a macro, or answers a question.
+5. **GriffinX speaks the result** — Using offline Piper neural TTS.
 6. **You confirm with feedback** — 👍 caches the mapping for instant future use. 👎 logs it as incorrect.
 
 If you don't use voice, you can type commands directly into the overlay's text box. The only skipped step is speech-to-text.
@@ -63,15 +63,15 @@ If you don't use voice, you can type commands directly into the overlay's text b
 
 ## Application Walkthrough
 
-### Starting Trixie
+### Starting GriffinX
 
-When you launch `main.py` (or `Trixie.exe`), the following happens:
+When you launch `main.py` (or `GriffinX.exe`), the following happens:
 
 1. `config.json` is loaded — model paths, device settings, cache threshold.
 2. The **SQLite database** opens at `logs/history.db` — stores interaction history, intent cache, and macros.
 3. The **Dashboard** opens immediately (80% of screen width/height, centred) — showing system gauges and model status cards.
 4. The **floating ball** appears bottom-right — the default compact mode.
-5. The **system tray icon** appears in the taskbar with a branded `trixie.ico`.
+5. The **system tray icon** appears in the taskbar with a branded `GriffinX.ico`.
 6. **Background model downloads** begin — Whisper, Qwen 3 4B, and Piper TTS download in parallel with live progress bars in the Dashboard.
 7. The **audio engine** prepares — microphone access, Whisper model path set (loaded lazily on first voice command).
 8. The **LLM engine** prepares — Qwen GGUF model path set (loaded lazily on first intent classification).
@@ -81,7 +81,7 @@ When you launch `main.py` (or `Trixie.exe`), the following happens:
 ### Closing / Minimizing
 
 - **Close the Dashboard** → silently minimises to system tray (no notification).
-- **Right-click the ball → Quit** → fully exits Trixie and unhooks all keyboard listeners.
+- **Right-click the ball → Quit** → fully exits GriffinX and unhooks all keyboard listeners.
 - **Right-click tray icon → Quit** → same as above.
 - **Click × on the expanded overlay** → collapses back to Ball Mode.
 - **Double-click tray icon** → opens the Dashboard.
@@ -96,7 +96,7 @@ You want to open Chrome. You hold `Ctrl + CapsLock` and say:
 
 > "Open Chrome"
 
-Trixie's UI shows a green pulsing ring animation and status: **"Listening..."**
+GriffinX's UI shows a green pulsing ring animation and status: **"Listening..."**
 
 ### Step 2: Microphone Capture
 
@@ -104,7 +104,7 @@ The `AudioEngine` opens a `sounddevice.InputStream` at 16 kHz, mono, float32. Au
 
 ### Step 3: Release Key → Transcription
 
-You release `CapsLock`. Trixie:
+You release `CapsLock`. GriffinX:
 1. Stops the audio stream
 2. Concatenates all audio chunks into a single NumPy array
 3. Flattens to 1D
@@ -115,7 +115,7 @@ You release `CapsLock`. Trixie:
 | beam_size | 1 |
 | vad_filter | True |
 | min_silence_duration_ms | 500 |
-| initial_prompt | `"Trixie voice commands and app names: open Chrome, open Notepad..."` |
+| initial_prompt | `"GriffinX voice commands and app names: open Chrome, open Notepad..."` |
 | language | `en` |
 
 **Transcript:** `"Open Chrome"`
@@ -124,7 +124,7 @@ The overlay shows: **"Transcribing..."** with a green neon arc spinner.
 
 ### Step 4: Intent Cache Check
 
-Trixie checks the SQLite `intent_cache` table for a fuzzy match:
+GriffinX checks the SQLite `intent_cache` table for a fuzzy match:
 
 ```
 SELECT transcription, intent, target FROM intent_cache
@@ -142,7 +142,7 @@ The Context Manager builds the prompt:
 
 ```
 <|im_start|>system
-You are Trixie: Your Local AI Assistant, a desktop AI assistant running locally on a Windows PC.
+You are GriffinX: Your Local AI Assistant, a desktop AI assistant running locally on a Windows PC.
 You can execute system commands, answer questions, and control the user's screen components via macros.
 Analyze the given transcript or prompt. Output only valid JSON representing the intent.
 Possible intents: 'open_app', 'close_app', 'general_query', 'macro_creation', 'macro_execution', 'run_script', 'string_type', 'hotkey', 'delay'.
@@ -178,7 +178,7 @@ The executor resolves `"chrome"`:
 - Overlay shows: `"open_app: chrome — Success"`
 - Piper TTS speaks: `"open app chrome success"` (first 200 chars, async thread)
 - Feedback buttons appear: 👍 👎
-- You click **👍** → Trixie caches `"Open Chrome" → open_app:chrome`
+- You click **👍** → GriffinX caches `"Open Chrome" → open_app:chrome`
 - Next time you say "Open Chrome", it will be an instant cache hit — no LLM needed.
 
 ---
@@ -214,7 +214,7 @@ The executor resolves `"chrome"`:
 5. **Response:** `"⚡ Cache match (100%): open_app → chrome"`
 6. **No feedback buttons** — cached commands are already verified
 
-This is why Trixie gets faster over time — your most-used commands become instant.
+This is why GriffinX gets faster over time — your most-used commands become instant.
 
 ---
 
@@ -318,9 +318,9 @@ Macros can also be assigned hotkeys. If a hotkey is bound, the macro fires insta
 
 ---
 
-## The Intent Cache — How Trixie Learns
+## The Intent Cache — How GriffinX Learns
 
-The intent cache is the heart of Trixie's learning system. It makes repeated commands instant.
+The intent cache is the heart of GriffinX's learning system. It makes repeated commands instant.
 
 ### How It Works
 
@@ -348,7 +348,7 @@ The intent cache is the heart of Trixie's learning system. It makes repeated com
 
 ## UI Guide — Dashboard
 
-The Dashboard is Trixie's command centre. It opens automatically at launch, sized to 80% of your screen and centred.
+The Dashboard is GriffinX's command centre. It opens automatically at launch, sized to 80% of your screen and centred.
 
 ### Layout (5:2 column ratio)
 
@@ -389,7 +389,7 @@ The Dashboard uses a premium **golden-brown** design system with:
 
 ## UI Guide — Ball Mode (Default)
 
-Trixie launches in Ball Mode by default — a compact branded floating ball using `trixie-circular.jpeg`.
+GriffinX launches in Ball Mode by default — a compact branded floating ball using `trixie-circular.jpeg`.
 
 ### Ball Interactions
 
@@ -397,7 +397,7 @@ Trixie launches in Ball Mode by default — a compact branded floating ball usin
 |---|---|
 | **Single-click** the ball | Open/close the text command input (300ms delay to prevent accidental triggers) |
 | **Double-click** the ball | Expand to the full translucent overlay |
-| **Right-click** the ball | Context menu — Open Dashboard / Quit Trixie |
+| **Right-click** the ball | Context menu — Open Dashboard / Quit GriffinX |
 | **Drag** the ball | Reposition anywhere on screen |
 
 ### Ball Animations
@@ -415,7 +415,7 @@ After intent execution, 👍/👎 buttons appear **below the ball** at 44×44px 
 
 ### Speech Bubble
 
-When Trixie responds in ball mode, a speech bubble appears above the ball with the response text. The bubble auto-hides after a duration based on word count:
+When GriffinX responds in ball mode, a speech bubble appears above the ball with the response text. The bubble auto-hides after a duration based on word count:
 
 | Response Length | Display Duration |
 |---|---|
@@ -431,12 +431,12 @@ Double-click the ball to expand to the full translucent overlay. It shows:
 
 | Section | What You See |
 |---|---|
-| **Header Bar** | Warm golden-brown gradient with Trixie logo — click to open Dashboard (hand cursor) |
+| **Header Bar** | Warm golden-brown gradient with GriffinX logo — click to open Dashboard (hand cursor) |
 | **× Button** | Circular golden button — collapses back to Ball Mode |
 | **Status Dot** | 🟢 Green pulse = Listening · 🟡 Orange = Thinking/Executing · 🔴 Red = Error · ⚪ Gray = Idle |
 | **Status Text** | Current state: "Idle", "Listening...", "Transcribing...", "Thinking...", "Executing: open_app..." |
 | **Transcript** | "YOU:" label with your transcribed/typed command |
-| **Response** | "TRIXIE:" label with the action result or conversational answer |
+| **Response** | "GriffinX:" label with the action result or conversational answer |
 | **Feedback** | 44px 👍/👎 buttons centred above the text input when awaiting confirmation |
 | **Text Input** | Bottom text box — type commands and press Enter |
 
@@ -450,20 +450,20 @@ The overlay is:
 
 ## System Tray
 
-The system tray icon uses the branded `trixie.ico`. The taskbar also displays the Trixie icon via `SetCurrentProcessExplicitAppUserModelID`.
+The system tray icon uses the branded `GriffinX.ico`. The taskbar also displays the GriffinX icon via `SetCurrentProcessExplicitAppUserModelID`.
 
 | Action | Effect |
 |---|---|
 | **Double-click tray icon** | Open the Dashboard |
 | **Right-click → Show/Hide Overlay** | Toggle the floating overlay visibility |
 | **Right-click → Push to Talk** | Trigger listening from the menu |
-| **Right-click → Quit** | Fully exit Trixie and unhook all keyboard listeners |
+| **Right-click → Quit** | Fully exit GriffinX and unhook all keyboard listeners |
 
 ---
 
 ## Command Executor — App Resolution
 
-When Trixie receives an `open_app` intent, it resolves the target through a 4-step process:
+When GriffinX receives an `open_app` intent, it resolves the target through a 4-step process:
 
 ### Resolution Order
 
@@ -481,7 +481,7 @@ On startup, the executor scans these directories for `.lnk` shortcut files:
 - `%PUBLIC%\Desktop\`
 - `%USERPROFILE%\Desktop\`
 
-Every discovered shortcut is added to the app resolution table. This means Trixie can open any application you have installed — not just the hardcoded whitelist.
+Every discovered shortcut is added to the app resolution table. This means GriffinX can open any application you have installed — not just the hardcoded whitelist.
 
 ### Built-In Whitelist (Partial)
 
@@ -506,7 +506,7 @@ Every discovered shortcut is added to the app resolution table. This means Trixi
 
 ## Model Management
 
-Trixie ships without large model files. All three models download automatically on first launch with live progress in the Dashboard:
+GriffinX ships without large model files. All three models download automatically on first launch with live progress in the Dashboard:
 
 | Model | Source | Size | Local Path |
 |---|---|---|---|
@@ -559,22 +559,22 @@ Failed downloads are cleaned up (`.tmp` files removed). Retry by re-running the 
 
 The Whisper model (~1.5 GB) downloads and loads on the first voice command. The LLM (~2.5 GB) loads on the first intent classification. Subsequent commands use the already-loaded models.
 
-### Trixie opens the wrong app
+### GriffinX opens the wrong app
 
-1. Use the 👎 feedback button so Trixie doesn't cache the wrong mapping.
+1. Use the 👎 feedback button so GriffinX doesn't cache the wrong mapping.
 2. Type the command once to test whether transcription or intent parsing caused the issue.
-3. Check if the app has a `.lnk` shortcut in Start Menu or Desktop — Trixie scans those on startup.
+3. Check if the app has a `.lnk` shortcut in Start Menu or Desktop — GriffinX scans those on startup.
 
 ### No audio input
 
 - Check the Windows default microphone in Sound Settings.
 - Ensure app microphone permissions are enabled.
-- Trixie uses the default input device via `sounddevice` — no device selection UI exists yet.
+- GriffinX uses the default input device via `sounddevice` — no device selection UI exists yet.
 
 ### LLM returns garbage
 
 - The Qwen 3 model may output `<think>` blocks — these are stripped automatically.
-- If JSON extraction fails, Trixie falls back to `general_query` with the raw text as the message.
+- If JSON extraction fails, GriffinX falls back to `general_query` with the raw text as the message.
 - Check `logs/` for the SQLite database to inspect past interactions.
 
 ### TTS is silent
@@ -594,7 +594,7 @@ uv sync --extra build
 uv run python build.py
 ```
 
-This produces `dist/Trixie.exe` — a single-file PyInstaller executable with:
+This produces `dist/GriffinX.exe` — a single-file PyInstaller executable with:
 - Python runtime + all dependencies
 - All `core/`, `ui/`, and `assets/` modules
 - Hidden imports for keyboard, sounddevice, llama_cpp, faster_whisper, PySide6, pynvml
@@ -621,8 +621,8 @@ The built executable runs on **both CPU-only and NVIDIA GPU** environments witho
 | Feature | Description |
 |---|---|
 | **Macro Manager UI** | A new section below AI Models in the Dashboard where users can register, name, edit, and delete macros. Named macros can then be triggered by voice ("Run the macro morning setup"). |
-| **Voice Responses** | When Trixie answers a general query, it speaks the response aloud via Piper TTS. This will be toggleable in Dashboard settings (on/off). |
-| **Text Narration** | Select/highlight text in any application, then click the Trixie ball — Trixie reads the selected text aloud using Piper TTS. |
+| **Voice Responses** | When GriffinX answers a general query, it speaks the response aloud via Piper TTS. This will be toggleable in Dashboard settings (on/off). |
+| **Text Narration** | Select/highlight text in any application, then click the GriffinX ball — GriffinX reads the selected text aloud using Piper TTS. |
 
 ### Future Ideas
 
@@ -636,7 +636,7 @@ The built executable runs on **both CPU-only and NVIDIA GPU** environments witho
 
 ## Project Summary
 
-Trixie is a local-first, voice-controlled Windows desktop assistant. It uses three AI models — Faster-Whisper for speech recognition, Qwen 3 4B for intent classification, and Piper for text-to-speech — all running on-device without cloud dependencies.
+GriffinX is a local-first, voice-controlled Windows desktop assistant. It uses three AI models — Faster-Whisper for speech recognition, Qwen 3 4B for intent classification, and Piper for text-to-speech — all running on-device without cloud dependencies.
 
 ### Key Components
 
@@ -656,7 +656,7 @@ Trixie is a local-first, voice-controlled Windows desktop assistant. It uses thr
 | **Theme** | `ui/theme.py` | Golden-brown design system — colors, fonts, dimensions, gold-glow effects, global QSS stylesheet. |
 | **Widgets** | `ui/widgets/` | Reusable GaugeWidget, ModelCard (16px progress bar), StatCard with gradient backgrounds. |
 | **System Monitor** | `core/system_monitor.py` | CPU/RAM/GPU/VRAM stats via psutil and optional pynvml (graceful N/A). |
-| **Settings** | `core/settings.py` | JSON settings persistence at %LOCALAPPDATA%/Trixie/ (atomic writes). |
+| **Settings** | `core/settings.py` | JSON settings persistence at %LOCALAPPDATA%/GriffinX/ (atomic writes). |
 | **Startup Manager** | `core/startup_manager.py` | Windows Registry startup management. |
 
 ### Technology Stack
@@ -675,4 +675,4 @@ Trixie is a local-first, voice-controlled Windows desktop assistant. It uses thr
 
 ---
 
-*Trixie: Your Local AI Assistant v1.0 — Built with Faster-Whisper + Qwen 3 4B + Piper TTS*
+*GriffinX: Your Local AI Assistant v1.0 — Built with Faster-Whisper + Qwen 3 4B + Piper TTS*

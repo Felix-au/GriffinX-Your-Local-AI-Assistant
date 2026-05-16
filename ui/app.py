@@ -16,7 +16,7 @@ def _resolve_asset_path(filename):
     return os.path.join(base, "assets", filename)
 
 class OverlayWidget(QWidget):
-    """Floating translucent overlay showing Trixie's live status."""
+    """Floating translucent overlay showing GriffinX's live status."""
     
     logo_clicked = Signal()  # emitted when user clicks the logo/header area"
     
@@ -41,7 +41,7 @@ class OverlayWidget(QWidget):
             if not pm.isNull():
                 self.ball_pixmap = pm.scaled(self.ball_size, self.ball_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         
-        self.setWindowTitle("Trixie: Your Local AI Assistant")
+        self.setWindowTitle("GriffinX: Your Local AI Assistant")
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint |
             Qt.WindowType.WindowStaysOnTopHint |
@@ -467,7 +467,7 @@ class OverlayWidget(QWidget):
                 p.drawEllipse(bx, by, bs, bs)
                 p.setPen(QColor(255, 255, 255))
                 p.setFont(QFont("Segoe UI", 26, QFont.Weight.Bold))
-                p.drawText(bx, by, bs, bs, Qt.AlignmentFlag.AlignCenter, "T")
+                p.drawText(bx, by, bs, bs, Qt.AlignmentFlag.AlignCenter, "G")
             
             # Draw speech bubble if there is a response
             if self.response_text:
@@ -531,7 +531,7 @@ class OverlayWidget(QWidget):
         p.setPen(QColor(255, 255, 255))
         title_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
         p.setFont(title_font)
-        p.drawText(logo_x, 26, "Trixie: Your Local AI Assistant")
+        p.drawText(logo_x, 26, "GriffinX: Your Local AI Assistant")
         
         # Status indicator
         status_font = QFont("Segoe UI", 9)
@@ -581,8 +581,8 @@ class OverlayWidget(QWidget):
             p.setPen(QColor(100, 220, 160))
             small_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
             p.setFont(small_font)
-            p.drawText(16, y, "TRIXIE:")
-            y += 3 # Move below the "TRIXIE:" label
+            p.drawText(16, y, "GRIFFINX:")
+            y += 3 # Move below the "GRIFFINX:" label
             
             p.setPen(QColor(200, 240, 210))
             p.setFont(QFont("Segoe UI", 10))
@@ -606,7 +606,7 @@ class OverlayWidget(QWidget):
                     QMenu::item:selected {{ background-color: #3D3222; }}
                 """)
                 dash_act = menu.addAction("Open Dashboard")
-                quit_act = menu.addAction("Quit Trixie")
+                quit_act = menu.addAction("Quit GriffinX")
                 
                 action = menu.exec(event.globalPosition().toPoint())
                 if action == dash_act:
@@ -696,7 +696,7 @@ class UIEngine(QObject):
             painter.drawEllipse(2, 2, 28, 28)
             painter.setPen(QColor(255, 255, 255))
             painter.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-            painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "T")
+            painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "G")
             painter.end()
             self.icon = QIcon(pixmap)
         
@@ -704,7 +704,7 @@ class UIEngine(QObject):
         self.tray = QSystemTrayIcon()
         self.tray.setIcon(self.icon)
         self.tray.setVisible(True)
-        self.tray.setToolTip("Trixie: Your Local AI Assistant")
+        self.tray.setToolTip("GriffinX: Your Local AI Assistant")
         
         # Tray menu
         self.menu = QMenu()

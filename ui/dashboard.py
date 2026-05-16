@@ -1,5 +1,5 @@
 """
-Trixie Dashboard — Main QMainWindow with gauges, model cards, activity log, and settings.
+GriffinX Dashboard — Main QMainWindow with gauges, model cards, activity log, and settings.
 """
 import logging
 from datetime import datetime
@@ -86,13 +86,13 @@ class HotkeyEdit(QLineEdit):
 
 
 class DashboardWindow(QMainWindow):
-    """Trixie command center — status, gauges, settings, and activity."""
+    """GriffinX command center — status, gauges, settings, and activity."""
 
     setting_changed = Signal(str, object)  # (key, value)
 
     def __init__(self, version: str = "1.0.0", parent=None):
         super().__init__(parent)
-        self.setWindowTitle(f"Trixie: Your Local AI Assistant  —  v{version}")
+        self.setWindowTitle(f"GriffinX: Your Local AI Assistant  —  v{version}")
         self.setMinimumSize(820, 520)
 
         # Launch at 80% of screen size
@@ -134,7 +134,7 @@ class DashboardWindow(QMainWindow):
         self.status_dot.setFont(QFont(FONTS["family"], FONTS["size_md"]))
         header.addWidget(self.status_dot)
 
-        title = QLabel(f"Trixie: Your Local AI Assistant")
+        title = QLabel(f"GriffinX: Your Local AI Assistant")
         title.setFont(QFont(FONTS["family"], FONTS["size_xl"], QFont.Weight.Bold))
         title.setStyleSheet(f"color: {COLORS['accent_gold']};")
         header.addWidget(title)
@@ -230,7 +230,7 @@ class DashboardWindow(QMainWindow):
         # Status bar
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage("Trixie is idle  •  Push-to-talk: Ctrl + CapsLock")
+        self.status_bar.showMessage("GriffinX is idle  •  Push-to-talk: Ctrl + CapsLock")
 
     # ── Public API ─────────────────────────────────────────────
     def update_stats(self, stats):

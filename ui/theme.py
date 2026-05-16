@@ -1,5 +1,5 @@
 """
-Trixie Design System — Dark-mode-first with warm amber/gold accent palette.
+GriffinX Design System — Dark-mode-first with warm amber/gold accent palette.
 Provides colors, fonts, dimensions, a global QSS stylesheet, and helpers.
 """
 

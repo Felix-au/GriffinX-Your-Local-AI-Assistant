@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-Trixie — PyInstaller Spec File
+GriffinX — PyInstaller Spec File
 Single-file EXE build with all dependencies bundled.
 Models are NOT bundled — downloaded on first run.
 Supports both CPU-only and NVIDIA GPU environments.
@@ -83,7 +83,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name="Trixie",
+    name="GriffinX",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -23,7 +23,7 @@ def get_gpu_vendor_windows():
     return "unknown"
 
 def main():
-    print("Starting Trixie: Your Local AI Assistant setup...")
+    print("Starting GriffinX: Your Local AI Assistant setup...")
     
     print("\n--- Step 1: Installing base dependencies ---")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])

@@ -1,5 +1,5 @@
 r"""
-Windows Registry startup manager for Trixie.
+Windows Registry startup manager for GriffinX.
 Manages the HKCU\Software\Microsoft\Windows\CurrentVersion\Run entry.
 """
 import sys
@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-_APP_NAME = "Trixie"
+_APP_NAME = "GriffinX"
 _REG_PATH = r"Software\Microsoft\Windows\CurrentVersion\Run"
 
 
@@ -22,7 +22,7 @@ def _get_exe_path() -> str:
 
 
 def enable_startup():
-    """Add Trixie to Windows startup via Registry."""
+    """Add GriffinX to Windows startup via Registry."""
     try:
         import winreg
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, _REG_PATH, 0, winreg.KEY_SET_VALUE)
@@ -34,7 +34,7 @@ def enable_startup():
 
 
 def disable_startup():
-    """Remove Trixie from Windows startup."""
+    """Remove GriffinX from Windows startup."""
     try:
         import winreg
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, _REG_PATH, 0, winreg.KEY_SET_VALUE)
@@ -49,7 +49,7 @@ def disable_startup():
 
 
 def is_startup_enabled() -> bool:
-    """Check if Trixie is set to start at boot."""
+    """Check if GriffinX is set to start at boot."""
     try:
         import winreg
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, _REG_PATH, 0, winreg.KEY_READ)

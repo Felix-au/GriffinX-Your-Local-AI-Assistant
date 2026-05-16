@@ -1,7 +1,7 @@
 [project]
-name = "trixie"
+name = "griffinx"
 version = "1.0.0"
-description = "Trixie: Your Local AI Assistant"
+description = "GriffinX: Your Local AI Assistant"
 requires-python = ">=3.10"
 dependencies = [
     "faster-whisper",

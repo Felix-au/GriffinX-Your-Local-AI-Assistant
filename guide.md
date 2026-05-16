@@ -1,9 +1,9 @@
-# Trixie: Your Local AI Assistant — Quick Guide
+# GriffinX: Your Local AI Assistant — Quick Guide
 
-A voice-controlled Windows desktop assistant that runs entirely on your machine. Hold a hotkey, speak naturally, and Trixie transcribes, classifies, executes, and speaks back — all offline.
+A voice-controlled Windows desktop assistant that runs entirely on your machine. Hold a hotkey, speak naturally, and GriffinX transcribes, classifies, executes, and speaks back — all offline.
 
 > [!IMPORTANT]
-> **Unlike cloud AI assistants** that require browser tabs, API keys, and internet access, Trixie runs **three local AI models** on your hardware: Faster-Whisper for speech recognition, Qwen 3 4B for intent classification, and Piper for text-to-speech. Your voice never leaves your machine.
+> **Unlike cloud AI assistants** that require browser tabs, API keys, and internet access, GriffinX runs **three local AI models** on your hardware: Faster-Whisper for speech recognition, Qwen 3 4B for intent classification, and Piper for text-to-speech. Your voice never leaves your machine.
 
 ## 🚀 How to Run
 
@@ -20,10 +20,10 @@ On first launch, the **Dashboard** opens immediately showing system gauges and m
 
 ### Option B — Standalone EXE
 
-Download `Trixie.exe` from [Releases](https://github.com/Felix-au/Trixie-Your-Local-AI-Assistant/releases) — no Python installation needed.
+Download `GriffinX.exe` from [Releases](https://github.com/Felix-au/GriffinX-Your-Local-AI-Assistant/releases) — no Python installation needed.
 
 ```
-Just double-click Trixie.exe
+Just double-click GriffinX.exe
 ```
 
 > [!NOTE]
@@ -31,7 +31,7 @@ Just double-click Trixie.exe
 
 ## 🔧 GPU Acceleration (Optional)
 
-By default Trixie runs on CPU. For GPU-accelerated LLM inference:
+By default GriffinX runs on CPU. For GPU-accelerated LLM inference:
 
 ```powershell
 python install.py
@@ -60,7 +60,7 @@ uv sync --extra build
 uv run python build.py
 ```
 
-Output: `dist/Trixie.exe` — a fully self-contained executable that works on both CPU-only and NVIDIA GPU environments.
+Output: `dist/GriffinX.exe` — a fully self-contained executable that works on both CPU-only and NVIDIA GPU environments.
 
 **What's bundled:** All Python runtime + dependencies (llama-cpp-python, faster-whisper, PySide6, piper-tts, etc.) + all core/ui modules.
 
@@ -68,15 +68,15 @@ Output: `dist/Trixie.exe` — a fully self-contained executable that works on bo
 
 ## 🎯 How to Use
 
-1. **Launch Trixie** — the Dashboard opens showing system stats and model download progress. The floating ball appears bottom-right. A system tray icon appears in the taskbar.
-2. **Hold your push-to-talk hotkey** (default: `Ctrl + CapsLock`) — Trixie starts listening (green pulse animation on the ball).
+1. **Launch GriffinX** — the Dashboard opens showing system stats and model download progress. The floating ball appears bottom-right. A system tray icon appears in the taskbar.
+2. **Hold your push-to-talk hotkey** (default: `Ctrl + CapsLock`) — GriffinX starts listening (green pulse animation on the ball).
 3. **Speak a command** — keep it short and direct.
-4. **Release the hotkey** — Trixie transcribes → classifies intent → executes the action.
+4. **Release the hotkey** — GriffinX transcribes → classifies intent → executes the action.
 5. **Confirm with 👍/👎** — positive feedback caches the command for instant future use.
-6. **Hear the response** — Trixie speaks the result back via neural TTS.
+6. **Hear the response** — GriffinX speaks the result back via neural TTS.
 
 > [!NOTE]
-> Trixie auto-classifies your command into an intent (open app, type text, hotkey, macro, or question). You don't need to use any special syntax — just speak naturally.
+> GriffinX auto-classifies your command into an intent (open app, type text, hotkey, macro, or question). You don't need to use any special syntax — just speak naturally.
 
 ## 🗣️ Example Commands
 
@@ -101,7 +101,7 @@ Hello
 
 ## 🔵 Minimal Ball Mode (Default)
 
-Trixie launches in Ball Mode by default — a branded floating circular avatar.
+GriffinX launches in Ball Mode by default — a branded floating circular avatar.
 
 | Action | Effect |
 |---|---|
@@ -118,7 +118,7 @@ When you double-click the ball, the full translucent overlay appears showing sta
 
 | Element | Description |
 |---|---|
-| **Header bar** | Warm golden-brown gradient with Trixie logo — click to open Dashboard |
+| **Header bar** | Warm golden-brown gradient with GriffinX logo — click to open Dashboard |
 | **× button** | Collapses back to Ball Mode |
 | **Status dot** | Green = listening, yellow = thinking, red = error |
 | **Text input** | Type commands at the bottom — press Enter to execute |
@@ -142,19 +142,19 @@ The Dashboard is the command centre that opens at launch (80% of screen size, ce
 
 **Closing the Dashboard:** Always minimises silently to the system tray — never fully exits.
 
-## ⚡ Intent Cache (How Trixie Gets Faster)
+## ⚡ Intent Cache (How GriffinX Gets Faster)
 
-When you confirm a command with 👍, Trixie caches the mapping:
+When you confirm a command with 👍, GriffinX caches the mapping:
 
 ```
 "Open Chrome" → open_app:chrome
 ```
 
-Next time you say anything similar (≥80% fuzzy match), the LLM is **completely skipped** — execution is instant. This is why Trixie gets faster the more you use it.
+Next time you say anything similar (≥80% fuzzy match), the LLM is **completely skipped** — execution is instant. This is why GriffinX gets faster the more you use it.
 
 ## ⚙️ Configuration
 
-### Dashboard Settings (persisted to `%LOCALAPPDATA%/Trixie/settings.json`)
+### Dashboard Settings (persisted to `%LOCALAPPDATA%/GriffinX/settings.json`)
 
 | Setting | Description |
 |---|---|
@@ -181,8 +181,8 @@ Next time you say anything similar (≥80% fuzzy match), the LLM is **completely
 - **Cross-environment EXE** — the built executable runs on both CPU-only and NVIDIA GPU systems.
 - **First launch is slow** — models (~4 GB) download from HuggingFace. Subsequent launches load from disk.
 - **First voice command is slow** — the Whisper model loads lazily on the first voice command (~5–10s on CPU).
-- **Microphone** — Trixie uses the Windows default input device via `sounddevice`. Check Sound Settings if no audio is captured.
-- **App resolution** — Trixie scans Start Menu and Desktop shortcuts on startup. Any installed app with a shortcut is discoverable.
+- **Microphone** — GriffinX uses the Windows default input device via `sounddevice`. Check Sound Settings if no audio is captured.
+- **App resolution** — GriffinX scans Start Menu and Desktop shortcuts on startup. Any installed app with a shortcut is discoverable.
 - **Safety** — Script execution is restricted to `.py` files. Delays are capped at 30 seconds. PyAutoGUI failsafe is enabled.
 - **Privacy** — All processing is local after model download. History stored in SQLite at `logs/history.db`.
 

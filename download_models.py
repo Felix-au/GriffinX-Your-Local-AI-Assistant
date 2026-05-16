@@ -1,5 +1,5 @@
 """
-Trixie Model Downloader
+GriffinX Model Downloader
 Downloads runtime models from Hugging Face.
 Models also auto-download at runtime if missing.
 """
@@ -8,7 +8,7 @@ from core.model_manager import MODEL_REGISTRY, ensure_model
 
 def main():
     print("=" * 60)
-    print("  Trixie: Your Local AI Assistant")
+    print("  GriffinX: Your Local AI Assistant")
     print("  Model Downloader")
     print("=" * 60)
     print()

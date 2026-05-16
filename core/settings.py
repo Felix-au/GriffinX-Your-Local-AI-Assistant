@@ -1,5 +1,5 @@
 """
-Settings persistence — stores user preferences in %LOCALAPPDATA%/Trixie/settings.json.
+Settings persistence — stores user preferences in %LOCALAPPDATA%/GriffinX/settings.json.
 Atomic writes via .tmp + os.rename.
 """
 import os
@@ -11,7 +11,7 @@ import platformdirs
 
 logger = logging.getLogger(__name__)
 
-SETTINGS_DIR = Path(platformdirs.user_data_dir("Trixie", appauthor=False))
+SETTINGS_DIR = Path(platformdirs.user_data_dir("GriffinX", appauthor=False))
 SETTINGS_FILE = SETTINGS_DIR / "settings.json"
 
 DEFAULT_SETTINGS = {

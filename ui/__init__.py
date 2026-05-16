@@ -1,1 +1,1 @@
-# Trixie UI Package
+# GriffinX UI Package

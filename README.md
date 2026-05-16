@@ -148,51 +148,51 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                      GriffinX Desktop App                              │
+│                      GriffinX Desktop App                            │
 │                                                                      │
 │  ┌────────────────┐    ┌──────────────────────────────────────────┐  │
 │  │   Keyboard     │    │        UI Layer (PySide6)                │  │
 │  │   Listener     │    │                                          │  │
-│  │                │    │  ┌──────────┐  ┌──────────┐ ┌────────┐  │  │
-│  │ Configurable   ├───►│  │ Dashboard│  │ Floating │ │ System │  │  │
-│  │ push-to-talk   │    │  │ (gauges, │  │ Overlay  │ │ Tray   │  │  │
-│  │ hotkey         │    │  │  models, │  │ (ball +  │ │ Icon   │  │  │
-│  └────────────────┘    │  │  logs,   │  │  expand) │ └────────┘  │  │
-│                        │  │  settings│  └────┬─────┘             │  │
-│                        │  └──────────┘       │                   │  │
-│                        └─────────────────────┼───────────────────┘  │
-│                                              │                      │
-│  ┌───────────────────────────────────────────┼───────────────────┐  │
+│  │                │    │  ┌──────────┐  ┌──────────┐ ┌────────┐   │  │
+│  │ Configurable   ├───►│  │ Dashboard│  │ Floating │ │ System │   │  │
+│  │ push-to-talk   │    │  │ (gauges, │  │ Overlay  │ │ Tray   │   │  │
+│  │ hotkey         │    │  │  models, │  │ (ball +  │ │ Icon   │   │  │
+│  └────────────────┘    │  │  logs,   │  │  expand) │ └────────┘   │  │
+│                        │  │  settings│  └────┬─────┘              │  │
+│                        │  └──────────┘       │                    │  │
+│                        └─────────────────────┼────────────────────┘  │
+│                                              │                       │
+│  ┌───────────────────────────────────────────┼────────────────────┐  │
 │  │                     Core Engine                                │  │
 │  │                                                                │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │  │
-│  │  │ Audio Engine │  │ LLM Engine   │  │ Command Executor   │   │  │
-│  │  │ Microphone   │  │ Qwen 3 4B    │  │ open/close apps    │   │  │
-│  │  │ 16kHz mono   │  │ GGUF via     │  │ type text          │   │  │
-│  │  │ Faster-      │  │ llama.cpp    │  │ press hotkeys      │   │  │
-│  │  │ Whisper STT  │  │ JSON intent  │  │ macro playback     │   │  │
-│  │  └──────────────┘  └──────────────┘  └────────────────────┘   │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐    │  │
+│  │  │ Audio Engine │  │ LLM Engine   │  │ Command Executor   │    │  │
+│  │  │ Microphone   │  │ Qwen 3 4B    │  │ open/close apps    │    │  │
+│  │  │ 16kHz mono   │  │ GGUF via     │  │ type text          │    │  │
+│  │  │ Faster-      │  │ llama.cpp    │  │ press hotkeys      │    │  │
+│  │  │ Whisper STT  │  │ JSON intent  │  │ macro playback     │    │  │
+│  │  └──────────────┘  └──────────────┘  └────────────────────┘    │  │
 │  │                                                                │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │  │
-│  │  │ Context      │  │ DB Manager   │  │ Macro Manager      │   │  │
-│  │  │ Manager      │  │ SQLite:      │  │ Create, bind       │   │  │
-│  │  │ System       │  │ history,     │  │ hotkeys, replay    │   │  │
-│  │  │ prompt +     │  │ intent cache │  └────────────────────┘   │  │
-│  │  │ memory       │  │ macros       │                           │  │
-│  │  └──────────────┘  └──────────────┘                           │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐    │  │
+│  │  │ Context      │  │ DB Manager   │  │ Macro Manager      │    │  │
+│  │  │ Manager      │  │ SQLite:      │  │ Create, bind       │    │  │
+│  │  │ System       │  │ history,     │  │ hotkeys, replay    │    │  │
+│  │  │ prompt +     │  │ intent cache │  └────────────────────┘    │  │
+│  │  │ memory       │  │ macros       │                            │  │
+│  │  └──────────────┘  └──────────────┘                            │  │
 │  │                                                                │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │  │
-│  │  │ TTS Engine   │  │ Model        │  │ System Monitor     │   │  │
-│  │  │ Piper neural │  │ Manager      │  │ CPU/RAM/GPU/VRAM   │   │  │
-│  │  │ offline      │  │ Auto-download│  │ real-time gauges   │   │  │
-│  │  │ synthesis    │  │ from HF      │  │ (pynvml optional)  │   │  │
-│  │  └──────────────┘  └──────────────┘  └────────────────────┘   │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐    │  │
+│  │  │ TTS Engine   │  │ Model        │  │ System Monitor     │    │  │
+│  │  │ Piper neural │  │ Manager      │  │ CPU/RAM/GPU/VRAM   │    │  │
+│  │  │ offline      │  │ Auto-download│  │ real-time gauges   │    │  │
+│  │  │ synthesis    │  │ from HF      │  │ (pynvml optional)  │    │  │
+│  │  └──────────────┘  └──────────────┘  └────────────────────┘    │  │
 │  │                                                                │  │
-│  │  ┌──────────────┐  ┌──────────────┐                           │  │
-│  │  │ Settings     │  │ Startup      │                           │  │
-│  │  │ JSON atomic  │  │ Manager      │                           │  │
-│  │  │ persistence  │  │ Win Registry │                           │  │
-│  │  └──────────────┘  └──────────────┘                           │  │
+│  │  ┌──────────────┐  ┌──────────────┐                            │  │
+│  │  │ Settings     │  │ Startup      │                            │  │
+│  │  │ JSON atomic  │  │ Manager      │                            │  │
+│  │  │ persistence  │  │ Win Registry │                            │  │
+│  │  └──────────────┘  └──────────────┘                            │  │
 │  └────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────┘
 ```

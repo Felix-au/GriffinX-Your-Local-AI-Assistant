@@ -2,7 +2,7 @@
 
 Welcome to the first official release of **GriffinX: Your Local AI Assistant**! 
 
-GriffinX is a voice-controlled Windows desktop assistant that runs entirely on your machine. This major v1.0 release brings a complete offline pipeline—transcription, intent classification, desktop execution, and text-to-speech—ensuring your privacy without any cloud dependency.
+GriffinX is a voice-controlled Windows desktop assistant that runs entirely on your machine. GriffinX v1.0 release brings a complete offline pipeline—transcription, intent classification, desktop execution, and text-to-speech—ensuring your privacy without any cloud dependency.
 
 ## 🌟 Key Features
 
@@ -26,13 +26,13 @@ GriffinX is a voice-controlled Windows desktop assistant that runs entirely on y
 *   **System Tray Integration:** Always runs quietly in the background.
 
 ### 📦 Standalone Executable
-*   **Plug and Play:** The new `GriffinX.exe` is a fully self-contained application. 
+*   **Plug and Play:** The `GriffinX.exe` is a fully self-contained application. 
 *   **Cross-Hardware Compatibility:** The exact same executable runs out-of-the-box on **both CPU-only and NVIDIA GPU** systems without any manual modification.
 *   **Smart Model Management:** To keep the executable size lightweight, the ~4GB AI models are not bundled. They will automatically download on your first launch and cache permanently in a local `models/` directory.
 
 ---
 
 ### 📝 Getting Started
-Simply run `GriffinX.exe` from the `dist` folder. The Dashboard will open and begin downloading the necessary models. Once finished, hold `Ctrl + CapsLock` (default) and speak your first command!
+Simply run `GriffinX.exe`. The Dashboard will open and begin downloading the necessary models. Once finished, hold `Ctrl + CapsLock` (default) and speak your first command!
 
 *Thank you for using GriffinX — built for users who want AI desktop control without the cloud.*

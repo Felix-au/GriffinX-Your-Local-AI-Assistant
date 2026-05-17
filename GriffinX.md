@@ -34,6 +34,19 @@
 
 ## How It Works — The Big Picture
 
+```mermaid
+flowchart LR
+    A["You hold Ctrl+Caps\nand speak"] --> B["Microphone\nrecords 16kHz mono"]
+    B --> C["Whisper STT\ntranscribes locally"]
+    C --> D["Qwen 3 LLM\nclassifies intent"]
+    D --> E["Executor\nacts on your desktop"]
+    E --> F["Feedback loop\ncaches correct maps"]
+    F --> G["Piper TTS\nspeaks result aloud"]
+```
+
+<details>
+<summary>ASCII fallback (click to expand)</summary>
+
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────────┐     ┌──────────────┐     ┌────────────────┐
 │  You hold    │────►│  Microphone  │────►│  Whisper STT     │────►│  Qwen 3 LLM  │────►│  Executor      │
@@ -47,6 +60,8 @@
                                           │  aloud           │     │  correct maps│
                                           └──────────────────┘     └──────────────┘
 ```
+
+</details>
 
 **In plain English:**
 

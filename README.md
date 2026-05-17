@@ -146,6 +146,39 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 
 ## 🏗 Architecture
 
+```mermaid
+graph TD
+    subgraph UI["UI Layer (PySide6)"]
+        KBD["Keyboard Listener\nConfigurable PTT hotkey"]
+        DASH["Dashboard\nGauges · Models · Logs · Settings"]
+        OVL["Floating Overlay\nBall Mode + Expanded"]
+        TRAY["System Tray"]
+    end
+
+    subgraph Core["Core Engine"]
+        AUD["Audio Engine\nMic 16kHz · Faster-Whisper STT"]
+        LLM["LLM Engine\nQwen 3 4B GGUF (llama.cpp)\nJSON intent output"]
+        EXEC["Command Executor\nopen/close apps · type · hotkeys · macros"]
+        CTX["Context Manager\nSystem prompt + memory"]
+        DB["DB Manager\nSQLite (history · cache · macros)"]
+        TTS["TTS Engine\nPiper neural · async"]
+        SYS["System Monitor\nCPU/RAM/GPU/VRAM"]
+        MM["Model Manager\nHuggingFace auto-download"]
+    end
+
+    KBD --> AUD
+    AUD --> LLM
+    CTX --> LLM
+    LLM --> EXEC
+    EXEC --> TTS
+    EXEC --> DB
+    MM --> DASH
+    SYS --> DASH
+```
+
+<details>
+<summary>ASCII fallback (click to expand)</summary>
+
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                      GriffinX Desktop App                            │
@@ -197,9 +230,29 @@ No cloud is required for normal use. Model files (~4 GB total) are downloaded on
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
+</details>
+
 ---
 
 ## 🔄 Pipeline Flow
+
+```mermaid
+flowchart TD
+    A["Hold hotkey\nMicrophone captures 16kHz mono"] --> B["Release key\nFaster-Whisper transcribes locally\n(GPU float16 / CPU int8)"]
+    B --> C["Transcript e.g. 'Open Chrome'"]
+    C --> D{Intent Cache Check\nSequenceMatcher ≥ 80%}
+    D -->|HIT ⚡| E["Execute immediately\nskip LLM"]
+    D -->|MISS| F["Context Manager\nSystem prompt + last 5 interactions"]
+    F --> G["Qwen 3 4B (llama.cpp)\nJSON: {intent, target}"]
+    G --> H["Command Executor\nopen_app · close_app · hotkey · macro · query"]
+    E --> I["TTS Engine speaks response\n(Piper neural, async)"]
+    H --> I
+    I --> J["Feedback 👍/👎\n👍 = cache mapping for instant reuse"]
+    J --> K["Interaction logged to SQLite"]
+```
+
+<details>
+<summary>ASCII fallback (click to expand)</summary>
 
 ```
 Hold hotkey (configurable) → Microphone captures 16kHz mono audio
@@ -242,6 +295,8 @@ Feedback buttons appear (👍/👎) → positive = cache the mapping
      ▼
 Interaction logged to SQLite (timestamp, input, intent, status, feedback)
 ```
+
+</details>
 
 ---
 
